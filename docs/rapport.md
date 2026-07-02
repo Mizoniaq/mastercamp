@@ -166,6 +166,45 @@ médicale — et montre que le jeu jouet ne convient pas pour juger un vrai mod�
 > (SmolVLM-256M), sans accès *gated*, pour prouver la mécanique (garde-fous,
 > validité JSON, détection d'hallucination) indépendamment de MedGemma.
 
+### 6.3 Validation sur données réelles (le résultat le plus instructif)
+
+MedGemma a été relancé sur **30 vraies radiographies** publiques (Kaggle
+*chest-xray-pneumonia*, 15 `normal` + 15 `suspected_opacity`), via
+`--cases data/real/real_cases.csv`. Résultats (`eval/results/real_vlm/`) :
+
+| Métrique | baseline_prompt | improved_prompt |
+|---|---:|---:|
+| Accuracy | **0.767** | 0.533 |
+| Macro-F1 | 0.566 | 0.292 |
+| **Sensibilité (`suspected_opacity`)** | **0.667** (10/15) | **0.067** (1/15) |
+| Spécificité (`normal`) | 0.867 (13/15) | 1.000 (15/15) |
+| Taux d'incertitude | 0.200 | 0.133 |
+| Taux de sur-affirmation | 0.933 | 0.800 |
+
+Deux enseignements majeurs, honnêtes :
+
+**1. Le modèle médical fonctionne réellement sur de vraies radios.** Contrairement
+au jeu synthétique (sensibilité 0/10), MedGemma détecte ici **10 pneumonies sur
+15** avec le prompt baseline (sensibilité 0.667, accuracy 0.767). C'est la preuve
+que l'approche a un vrai signal médical — impossible à démontrer sur le synthétique.
+
+**2. Notre « amélioration » a sur-appris le jeu jouet et échoue sur le réel.** La
+règle stricte d'incertitude, qui améliorait le score sur le synthétique, **fait
+chuter la sensibilité de 0.667 à 0.067** sur données réelles : le prompt renforcé
+pousse MedGemma à sur-classer en `normal` (25/30) et à **manquer 14 pneumonies sur
+15**. En contexte médical, ce sont des **faux négatifs dangereux**. Le prompt
+baseline est donc, sur le réel, **plus sûr** que notre « amélioration ».
+
+> **Leçon d'ingénierie** : une amélioration validée sur un jeu jouet doit être
+> **re-validée sur des données réelles** avant d'être adoptée. Un gain mesuré sur
+> le synthétique ne transfère pas nécessairement — il peut même nuire.
+
+**Nuance sur le taux de sur-affirmation** : il est très élevé sur le réel
+(0.80-0.93) car, sur de vraies images pathologiques, nommer « consolidation » ou
+« opacité » est souvent **légitime**, pas une hallucination. Notre détecteur, conçu
+pour le cadre synthétique (où toute pathologie nommée = invention), **sur-compte**
+donc sur données réelles : la métrique doit être interprétée selon le contexte.
+
 ## 7. Analyse d'erreurs
 
 `eval/error_register.csv` (généré par `eval/build_error_register.py`) contient les
@@ -199,8 +238,14 @@ sur-abstention) est disponible dans [`docs/error_analysis.md`](error_analysis.md
 - Sensibilité aux seuils (`OPACITY_BRIGHT_FRACTION`, seuil de confiance 0.60) et,
   pour le connecteur réel, au modèle et au prompt.
 - **Hallucination textuelle observée** avec MedGemma sous prompt baseline (30 % de
-  justifications citant des pathologies non fondées), **ramenée à 0 %** par le
-  prompt renforcé — mais le risque demeure intrinsèque à tout VLM réel.
+  justifications citant des pathologies non fondées sur le jeu synthétique),
+  **ramenée à 0 %** par le prompt renforcé — mais le risque demeure intrinsèque à
+  tout VLM réel.
+- **L'amélioration ne transfère pas au réel** : la règle d'incertitude, bénéfique
+  sur le synthétique, fait chuter la sensibilité de MedGemma de 0.67 à 0.07 sur de
+  vraies radios (pneumonies manquées). Elle a **sur-appris le jeu jouet** et doit
+  être re-calibrée sur données réelles avant tout usage — un garde-fou trop strict
+  devient dangereux (faux négatifs).
 
 ## 9. Risques et précautions éthiques
 

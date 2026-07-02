@@ -79,7 +79,12 @@ def main() -> None:
         raise SystemExit(f"Images folder not found: {args.images}. See data/real/README.md.")
 
     explicit = load_labels(args.labels)
-    all_images = sorted(p for p in args.images.rglob("*") if p.suffix.lower() in IMAGE_SUFFIXES)
+    all_images = sorted(
+        p for p in args.images.rglob("*")
+        if p.suffix.lower() in IMAGE_SUFFIXES
+        and "__MACOSX" not in p.parts          # zip/macOS junk folder
+        and not p.name.startswith("._")         # AppleDouble resource forks
+    )
     if not all_images:
         raise SystemExit(f"No images under {args.images}. Add authorized, de-identified files first.")
 
