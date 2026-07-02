@@ -132,29 +132,39 @@ mesure en plus un **taux de sur-affirmation** (`detect_overclaim` : présence de
 pathologies nommées / langage définitif = proxy d'hallucination) et un taux de
 JSON invalide.
 
-Résultats obtenus avec un modèle **ouvert et accessible** (SmolVLM-256M, 9 cas),
-utilisé comme **substitut de validation du harnais** — ce n'est pas un modèle
-médical, sa faible exactitude est attendue et n'est pas le sujet :
+Résultats obtenus sur le **vrai modèle médical `google/medgemma-4b-it`** (4B,
+image-texte, instruction-tuned), 30 cas, GPU :
 
 | Métrique | baseline_prompt | improved_prompt |
 |---|---:|---:|
-| Accuracy | 0.333 | 0.333 |
-| JSON valide | 1.000 | 0.889 |
+| Accuracy | 0.633 | 0.667 |
+| Macro-F1 | 0.531 | 0.556 |
+| Spécificité (`normal`) | 0.900 | 1.000 |
+| Sensibilité (`suspected_opacity`) | 0.000 | 0.000 |
+| **Taux de sur-affirmation (hallucination)** | **0.300** | **0.000** |
+| JSON valide | 1.000 | 1.000 |
 | Warning présent | 1.000 | 1.000 |
-| Taux de sur-affirmation | 0.000 | 0.111 |
-| JSON invalide (→ `uncertain`) | 0.000 | 0.111 |
-| Latence médiane | ~6.0 s | ~6.4 s |
+| Taux d'incertitude | 0.700 | 0.333 |
+| Latence médiane | ~17 s | ~16 s |
 
-**Ce que ça prouve** : le pipeline fonctionne sur une **vraie** sortie de modèle,
-les garde-fous rattrapent les cas réels (JSON invalide → `uncertain`), le warning
-est toujours présent et l'hallucination est détectée automatiquement. Un modèle
-généraliste ne sait pas lire une radio (d'où l'exactitude faible) — c'est
-précisément pourquoi le prototype reste prudent et non clinique.
+**Résultat marquant — le prompt amélioré supprime les hallucinations.** Avec le
+prompt baseline, MedGemma nomme des pathologies non fondées dans ses
+justifications (`consolidation` ×8, `mass` ×4, `pneumonia` ×3, `nodule`,
+`diagnosis`) → 9 cas sur 30 (taux 0.30). Le prompt renforcé (règles strictes
+d'incertitude et d'évidence) ramène ce taux à **0.00**, tout en améliorant
+légèrement accuracy, macro-F1 et spécificité. C'est une **amélioration de sécurité
+mesurée sur un vrai modèle médical**, obtenue uniquement par *prompt engineering*.
 
-**Modèle médical visé (MedGemma)** : le connecteur est câblé
-(`--model google/medgemma-4b-it`). Il est *gated* : il faut accepter la licence
-sur la page du modèle et fournir `HF_TOKEN`. Une fois l'accès accordé, la même
-commande produit la comparaison sur le vrai modèle médical.
+**Limite honnête et importante** : la sensibilité est de **0/10** sur les opacités
+dans les deux modes. MedGemma, entraîné sur de **vraies** radiographies, ne
+reconnaît pas les fausses opacités synthétiques : il les lit comme `normal` ou
+s'abstient (`uncertain`). Cela **confirme empiriquement** l'avertissement du sujet
+— un bon score sur le jeu synthétique ne préjuge en rien d'une performance
+médicale — et montre que le jeu jouet ne convient pas pour juger un vrai modèle.
+
+> Le harnais avait d'abord été validé de bout en bout sur un modèle **ouvert**
+> (SmolVLM-256M), sans accès *gated*, pour prouver la mécanique (garde-fous,
+> validité JSON, détection d'hallucination) indépendamment de MedGemma.
 
 ## 7. Analyse d'erreurs
 
@@ -180,14 +190,17 @@ sur-abstention) est disponible dans [`docs/error_analysis.md`](error_analysis.md
 
 ## 8. Limites
 
-- Données **synthétiques** non représentatives d'une population clinique.
-- Sur ce jeu, les classes sont nettement séparables → un score parfait en mode
-  amélioré est **attendu** et ne préjuge pas d'une performance médicale.
+- Données **synthétiques** non représentatives d'une population clinique. Pour le
+  classifieur jouet, les classes sont nettement séparables → un score parfait en
+  mode amélioré est **attendu** et ne préjuge pas d'une performance médicale. Le
+  vrai modèle MedGemma, lui, ne « voit » pas les fausses opacités synthétiques
+  (sensibilité 0/10) : le jeu jouet ne suffit pas à évaluer un modèle réel.
 - La **confiance est un proxy heuristique, non calibré**.
 - Sensibilité aux seuils (`OPACITY_BRIGHT_FRACTION`, seuil de confiance 0.60) et,
   pour le connecteur réel, au modèle et au prompt.
-- Risque d'**hallucination textuelle** avec un VLM réel (non présent dans le mode
-  jouet dont les observations sont dérivées des features).
+- **Hallucination textuelle observée** avec MedGemma sous prompt baseline (30 % de
+  justifications citant des pathologies non fondées), **ramenée à 0 %** par le
+  prompt renforcé — mais le risque demeure intrinsèque à tout VLM réel.
 
 ## 9. Risques et précautions éthiques
 
@@ -226,10 +239,10 @@ python eval/build_error_register.py
 # 4. Analyse de sensibilité au seuil
 python eval/threshold_sweep.py
 
-# 5. Comparaison de prompts sur un vrai VLM (modèle ouvert accessible)
-python eval/run_vlm_comparison.py --model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9
-#   Modèle médical visé (accès gated + HF_TOKEN) :
-#   HF_TOKEN=... python eval/run_vlm_comparison.py --model google/medgemma-4b-it
+# 5. Comparaison de prompts sur le vrai modèle médical MedGemma (accès gated + HF_TOKEN)
+HF_TOKEN=... python eval/run_vlm_comparison.py --model google/medgemma-4b-it
+#   Variante sans accès gated (validation du harnais sur modèle ouvert) :
+#   python eval/run_vlm_comparison.py --model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9
 
 # 6. (Optionnel) Évaluer sur un échantillon réel autorisé — voir data/real/README.md
 python scripts/prepare_real_dataset.py --images data/real/images --labels data/real/labels.csv
