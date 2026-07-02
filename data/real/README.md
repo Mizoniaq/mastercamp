@@ -17,6 +17,33 @@ puis lancez le script d'ingestion.
 > **Ne commitez jamais** d'images patient réelles, même pseudonymisées, sans
 > autorisation explicite et traçable. Ce dossier (hors ce README) est ignoré par git.
 
+## Chemin rapide recommandé (le plus simple)
+
+Le dataset Kaggle **« Chest X-Ray Images (Pneumonia) »**
+(`paultimothymooney/chest-xray-pneumonia`) est le plus adapté : images **JPEG**
+(pas de DICOM à convertir), deux classes qui correspondent directement au projet.
+
+**Mapping vers nos classes** : `NORMAL` → `normal`, `PNEUMONIA` → `suspected_opacity`.
+
+```bash
+# 1. Installer et configurer l'API Kaggle (compte Kaggle + token kaggle.json)
+pip install kaggle
+#    Déposez kaggle.json dans %USERPROFILE%\.kaggle\  (Windows)
+
+# 2. Télécharger et décompresser (accepter les conditions du dataset sur le site)
+kaggle datasets download -d paultimothymooney/chest-xray-pneumonia -p data/real --unzip
+
+# 3. Prendre un petit échantillon (~15 normal + ~15 pneumonia) et le poser dans
+#    data/real/images/ , puis créer data/real/labels.csv :
+#        filename,label
+#        NORMAL-xxxx.jpeg,normal
+#        person-xxxx_bacteria.jpeg,suspected_opacity
+```
+
+> Sans compte Kaggle, téléchargez manuellement depuis la page du dataset. **Citez
+> la source et la licence dans le rapport** (usage recherche, non redistribuable) —
+> et ne commitez aucune image.
+
 ## Ingestion
 
 1. Placez 20-30 images dé-identifiées dans `data/real/images/`.
@@ -34,8 +61,15 @@ python scripts/prepare_real_dataset.py --images data/real/images --labels data/r
 python eval/run_evaluation.py --mode toy --cases data/real/real_cases.csv
 ```
 
-Le classifieur jouet fonctionne sur n'importe quelle image ; sur de vraies
-radios, il constitue une **baseline faible et honnête** (les images réelles ne
-sont pas séparables aussi trivialement que le jeu synthétique). Pour une analyse
-médicale sérieuse, utilisez le connecteur MedGemma
-(`eval/run_vlm_comparison.py --model google/medgemma-4b-it`).
+5. Faites tourner le **vrai modèle médical** sur ces images réelles :
+
+```bash
+$env:HF_TOKEN="ta_cle"
+python eval/run_vlm_comparison.py --model google/medgemma-4b-it --cases data/real/real_cases.csv --limit 0
+```
+
+Le classifieur jouet fonctionne sur n'importe quelle image, mais ses features sont
+calées sur le jeu synthétique : sur de vraies radios il constitue une **baseline
+faible et honnête**. L'intérêt est surtout de faire tourner **MedGemma** : sur de
+vraies opacités, il devrait produire une sensibilité **> 0** (contrairement au jeu
+synthétique), ce qui démontre enfin un vrai signal médical.

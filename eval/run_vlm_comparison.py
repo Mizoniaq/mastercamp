@@ -33,8 +33,8 @@ from src.metrics import summarize_metrics
 from src.database import insert_run
 
 
-def read_cases(limit: int | None) -> list[dict]:
-    with (ROOT / "data" / "synthetic_cases.csv").open(newline="", encoding="utf-8") as f:
+def read_cases(cases_csv: Path, limit: int | None) -> list[dict]:
+    with cases_csv.open(newline="", encoding="utf-8") as f:
         cases = list(csv.DictReader(f))
     return cases[:limit] if limit else cases
 
@@ -76,11 +76,13 @@ def main() -> None:
     parser.add_argument("--model", default="HuggingFaceTB/SmolVLM-256M-Instruct",
                         help="HF image-text-to-text model id (use google/medgemma-4b-it with HF_TOKEN)")
     parser.add_argument("--limit", type=int, default=9, help="number of cases (0 = all)")
+    parser.add_argument("--cases", type=Path, default=ROOT / "data" / "synthetic_cases.csv",
+                        help="cases CSV (same schema); point at a real sample, e.g. data/real/real_cases.csv")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "eval" / "results")
     parser.add_argument("--db-path", type=Path, default=ROOT / "medical_ai_evidence.sqlite")
     args = parser.parse_args()
 
-    cases = read_cases(args.limit or None)
+    cases = read_cases(args.cases, args.limit or None)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     summary = []
