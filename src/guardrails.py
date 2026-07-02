@@ -6,6 +6,29 @@ ALLOWED_CLASSES = {"normal", "suspected_opacity", "uncertain"}
 REQUIRED_KEYS = {"image_quality", "predicted_class", "confidence", "visual_evidence", "justification", "limitations", "warning"}
 WARNING_TEXT = "Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise."
 
+# Named pathologies / definitive-certainty language that a cautious, non-clinical
+# prototype must not assert. Their presence in a justification is treated as an
+# unfounded/over-claiming statement (a hallucination-prone signal). "opacity" is
+# intentionally excluded: it is the name of an allowed class, not an over-claim.
+OVERCLAIM_TERMS = frozenset({
+    "pneumonia", "consolidation", "effusion", "pleural", "cardiomegaly", "edema",
+    "fracture", "tumor", "tumour", "mass", "nodule", "tuberculosis", "cancer",
+    "carcinoma", "pneumothorax", "emphysema", "fibrosis", "metastasis",
+    "diagnosis", "diagnosed", "definitely", "certainly", "confirmed",
+})
+
+
+def detect_overclaim(pred: dict[str, Any]) -> list[str]:
+    """Return over-claiming terms found in the justification / visual evidence.
+
+    Used as an automatic proxy for unfounded justification (hallucination) on any
+    text output, including real VLM answers.
+    """
+    parts = [str(pred.get("justification", ""))]
+    parts += [str(item) for item in pred.get("visual_evidence", []) or []]
+    text = " ".join(parts).lower()
+    return sorted({term for term in OVERCLAIM_TERMS if term in text})
+
 
 def validate_prediction(pred: dict[str, Any]) -> tuple[bool, list[str]]:
     errors: list[str] = []

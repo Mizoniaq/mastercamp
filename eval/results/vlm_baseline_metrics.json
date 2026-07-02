@@ -1,0 +1,14 @@
+{
+  "n": 9,
+  "accuracy": 0.3333,
+  "macro_f1": 0.1667,
+  "sensitivity": 0.0,
+  "specificity": 0.0,
+  "json_valid_rate": 1.0,
+  "warning_rate": 1.0,
+  "uncertain_rate": 1.0,
+  "latency_ms_median": 6019.0,
+  "overclaim_rate": 0.0,
+  "json_error_rate": 0.0,
+  "model": "HuggingFaceTB/SmolVLM-256M-Instruct"
+}

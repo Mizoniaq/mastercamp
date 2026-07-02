@@ -60,6 +60,12 @@ python eval/run_evaluation.py --mode toy
 
 # Registre d'erreurs commenté (30 cas) -> eval/error_register.csv
 python eval/build_error_register.py
+
+# Analyse de sensibilité au seuil de qualité
+python eval/threshold_sweep.py
+
+# Comparaison de prompts sur un VRAI VLM (modèle ouvert accessible, GPU conseillé)
+python eval/run_vlm_comparison.py --model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9
 ```
 
 **Preuves générées** : `eval/results/before_after_summary.csv`,
@@ -69,16 +75,21 @@ Synthèse chiffrée et analyse : [`docs/rapport.md`](docs/rapport.md).
 
 ### Modèle réel MedGemma (optionnel, niveau Could)
 
-Le connecteur `src.inference.medgemma_predict` appelle un vrai VLM via
-`transformers`. Il n'est **pas** utilisé par la démo par défaut (téléchargement
-de plusieurs Go, GPU recommandé). Il lit le token depuis l'environnement — jamais
-en dur dans le code :
+Le connecteur `src.inference.vlm_predict` appelle un vrai VLM via `transformers`.
+Il n'est **pas** utilisé par la démo par défaut (téléchargement de plusieurs Go,
+GPU recommandé). Il lit le token depuis l'environnement — jamais en dur :
 
 ```bash
 export HF_TOKEN="<votre-token-huggingface>"   # Windows: $env:HF_TOKEN="..."
+python eval/run_vlm_comparison.py --model google/medgemma-4b-it
 ```
 
-Voir [`.env.example`](.env.example) pour les variables d'environnement.
+MedGemma est **gated** : il faut d'abord accepter la licence sur
+<https://huggingface.co/google/medgemma-4b-it> (approbation automatique), sinon le
+téléchargement renvoie une erreur 403. Un modèle **ouvert** (`HuggingFaceTB/SmolVLM-256M-Instruct`)
+permet de valider le harnais sans accès *gated*. Pour évaluer sur de vraies
+radios, voir [`data/real/README.md`](data/real/README.md). Variables
+d'environnement : [`.env.example`](.env.example).
 
 ## Smoke test du dépôt
 

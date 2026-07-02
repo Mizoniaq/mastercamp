@@ -14,8 +14,8 @@ from fastapi.testclient import TestClient
 from api.main import app
 from api.main import health
 from src.database import fetch_recent_runs, log_prediction
-from src.guardrails import WARNING_TEXT, apply_safety_guardrails, validate_prediction
-from src.inference import toy_predict
+from src.guardrails import WARNING_TEXT, apply_safety_guardrails, detect_overclaim, validate_prediction
+from src.inference import robust_predict, toy_predict
 from src.metrics import summarize_metrics
 
 
@@ -103,7 +103,7 @@ def test_prediction_schema_warning_and_guardrails() -> None:
 
 
 def test_python_source_tree_compiles() -> None:
-    for folder in ("src", "api", "app", "eval", "finetuning", "tests"):
+    for folder in ("src", "api", "app", "eval", "finetuning", "tests", "scripts"):
         assert compileall.compile_dir(ROOT / folder, quiet=1)
 
 
@@ -219,3 +219,28 @@ def test_prediction_logging_round_trip(tmp_path) -> None:
     assert len(runs) == 1
     assert runs[0]["case_id"] == "CXR_SYN_001"
     assert runs[0]["predicted_class"] == pred["predicted_class"]
+
+
+def test_robust_predict_handles_corrupt_input(tmp_path) -> None:
+    bad = tmp_path / "bad.png"
+    bad.write_bytes(b"this is not an image")
+    pred = apply_safety_guardrails(robust_predict(bad, mode="improved"))
+
+    assert pred["predicted_class"] == "uncertain"
+    assert pred["warning"] == WARNING_TEXT
+    assert any("unreadable" in item for item in pred["limitations"])
+
+
+def test_overclaim_detector_flags_clinical_language() -> None:
+    over = detect_overclaim({"justification": "Diagnosis confirmed: pneumonia with pleural effusion.", "visual_evidence": []})
+    cautious = detect_overclaim({"justification": "A focal bright region compatible with the toy marker.", "visual_evidence": ["bright area"]})
+
+    assert {"pneumonia", "pleural", "effusion", "diagnosis", "confirmed"} <= set(over)
+    assert cautious == []
+
+
+def test_quality_threshold_override_changes_abstention() -> None:
+    normal_image = ROOT / "data" / "sample_images" / "CXR_SYN_001_normal.png"
+    # A very high quality threshold over-flags even a normal image as limited.
+    pred = apply_safety_guardrails(toy_predict(normal_image, mode="improved", limited_contrast_std=25.0))
+    assert pred["predicted_class"] == "uncertain"

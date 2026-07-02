@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.guardrails import WARNING_TEXT, apply_safety_guardrails
-from src.inference import toy_predict
+from src.inference import robust_predict
 from src.database import fetch_recent_runs, log_prediction
 
 SAMPLE_DIR = ROOT / "data" / "sample_images"
@@ -744,9 +744,35 @@ def render_dashboard_tab() -> None:
     else:
         st.info(
             "Aucun résultat d'évaluation trouvé. Générez-les avec :\n\n"
-            "`python eval/run_evaluation.py --mode toy "
-            "--out-dir eval/results --db-path medical_ai_evidence.sqlite`"
+            "`python eval/run_evaluation.py --mode toy`"
         )
+
+    # Matrices de confusion baseline vs amélioration
+    conf_baseline = RESULTS_DIR / "baseline_confusion.csv"
+    conf_improved = RESULTS_DIR / "improved_confusion.csv"
+    if conf_baseline.exists() and conf_improved.exists():
+        st.subheader("Matrices de confusion")
+        col_a, col_b = st.columns(2)
+        for col, title, path in [
+            (col_a, "Baseline", conf_baseline),
+            (col_b, "Amélioration", conf_improved),
+        ]:
+            with col:
+                st.caption(title)
+                cm = pd.read_csv(path).set_index("true_label")
+                cm.columns = [c.replace("pred_", "") for c in cm.columns]
+                fig, ax = plt.subplots(figsize=(4, 3))
+                sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False, ax=ax)
+                ax.set_xlabel("Prédit"); ax.set_ylabel("Réel")
+                st.pyplot(fig)
+
+    # Analyse de sensibilité au seuil
+    sweep_path = RESULTS_DIR / "threshold_sweep.csv"
+    if sweep_path.exists():
+        st.subheader("Sensibilité au seuil de qualité")
+        st.caption("Trop bas : aucun bénéfice · trop haut : sur-abstention. Le seuil retenu (13) est dans la zone sûre.")
+        sweep = pd.read_csv(sweep_path).set_index("limited_contrast_std")
+        st.line_chart(sweep[["accuracy", "macro_f1", "uncertain_rate"]])
 
     st.header("Journal des prédictions (SQLite)")
     st.caption("Chaque prédiction de la démo est tracée : image, modèle, prompt, classe, confiance, latence.")
@@ -830,7 +856,7 @@ def main() -> None:
 
             with result_col:
                 st.markdown("#### Résultat")
-                pred = apply_safety_guardrails(toy_predict(image_path, mode=mode))
+                pred = apply_safety_guardrails(robust_predict(image_path, mode=mode))
                 render_prediction_card(pred)
 
                 # Trace de la prédiction (contrat de journalisation).

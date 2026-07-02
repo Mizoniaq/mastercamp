@@ -55,12 +55,19 @@ def extract_features(path: str | Path) -> dict[str, float]:
     }
 
 
-def quality_from_features(features: dict[str, float]) -> str:
-    """Map contrast to an interpretable image-quality label."""
+def quality_from_features(
+    features: dict[str, float],
+    limited_std: float = LIMITED_CONTRAST_STD,
+    poor_std: float = POOR_CONTRAST_STD,
+) -> str:
+    """Map contrast to an interpretable image-quality label.
+
+    Thresholds are overridable so the sensitivity analysis can sweep them.
+    """
     contrast = features["contrast"]
-    if contrast < POOR_CONTRAST_STD:
+    if contrast < poor_std:
         return "poor"
-    if contrast < LIMITED_CONTRAST_STD:
+    if contrast < limited_std:
         return "limited"
     return "good"
 

@@ -1,0 +1,10 @@
+case_id,label,predicted_class,confidence,json_valid,overclaim_terms,warning,latency_ms
+CXR_SYN_001,normal,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,21822
+CXR_SYN_002,suspected_opacity,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,5590
+CXR_SYN_003,uncertain,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,5626
+CXR_SYN_004,normal,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,5705
+CXR_SYN_005,suspected_opacity,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,7111
+CXR_SYN_006,uncertain,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,5627
+CXR_SYN_007,normal,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,7095
+CXR_SYN_008,suspected_opacity,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,6047
+CXR_SYN_009,uncertain,uncertain,0.0,True,,Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise.,6019

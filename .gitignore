@@ -9,6 +9,10 @@ eval/outputs/
 .env
 .DS_Store
 
+# Real medical data must never be committed (only the guide is tracked)
+data/real/*
+!data/real/README.md
+
 # Local/professor visual material
 assets/
 

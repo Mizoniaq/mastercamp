@@ -109,6 +109,53 @@ faussement rassurant. La règle d'incertitude fait passer ces 10 cas en
 macro-F1 de 0.556 à 1.0. L'amélioration corrige donc un **mode d'échec précis et
 médicalement pertinent**, pas seulement un score.
 
+### 6.1 Sensibilité au seuil (analyse d'ablation)
+
+`eval/threshold_sweep.py` fait varier le seuil de contraste qui déclenche
+l'abstention (mode amélioré). La courbe montre trois régimes :
+
+| Seuil `limited_contrast_std` | Accuracy | Taux d'incertitude | Régime |
+|---|---:|---:|---|
+| < 10.5 | 0.667 | 0.00 | aucune abstention (= baseline) |
+| **11 – 16** | **1.000** | **0.333** | **zone sûre (valeur retenue : 13)** |
+| ≥ 18 | 0.667 → 0.333 | 0.67 → 1.0 | sur-abstention (utilité détruite) |
+
+Le seuil retenu (13) est volontairement au centre de la plage sûre [10.6 ; 16.9].
+Cela prouve que le garde-fou a un **coût** et que sa valeur est justifiée, pas
+arbitraire.
+
+### 6.2 Comparaison de prompts sur un vrai VLM + métrique d'hallucination
+
+`eval/run_vlm_comparison.py` exécute un **vrai** modèle vision-langage avec le
+`baseline_prompt` puis l'`improved_prompt`, applique les mêmes garde-fous et
+mesure en plus un **taux de sur-affirmation** (`detect_overclaim` : présence de
+pathologies nommées / langage définitif = proxy d'hallucination) et un taux de
+JSON invalide.
+
+Résultats obtenus avec un modèle **ouvert et accessible** (SmolVLM-256M, 9 cas),
+utilisé comme **substitut de validation du harnais** — ce n'est pas un modèle
+médical, sa faible exactitude est attendue et n'est pas le sujet :
+
+| Métrique | baseline_prompt | improved_prompt |
+|---|---:|---:|
+| Accuracy | 0.333 | 0.333 |
+| JSON valide | 1.000 | 0.889 |
+| Warning présent | 1.000 | 1.000 |
+| Taux de sur-affirmation | 0.000 | 0.111 |
+| JSON invalide (→ `uncertain`) | 0.000 | 0.111 |
+| Latence médiane | ~6.0 s | ~6.4 s |
+
+**Ce que ça prouve** : le pipeline fonctionne sur une **vraie** sortie de modèle,
+les garde-fous rattrapent les cas réels (JSON invalide → `uncertain`), le warning
+est toujours présent et l'hallucination est détectée automatiquement. Un modèle
+généraliste ne sait pas lire une radio (d'où l'exactitude faible) — c'est
+précisément pourquoi le prototype reste prudent et non clinique.
+
+**Modèle médical visé (MedGemma)** : le connecteur est câblé
+(`--model google/medgemma-4b-it`). Il est *gated* : il faut accepter la licence
+sur la page du modèle et fournir `HF_TOKEN`. Une fois l'accès accordé, la même
+commande produit la comparaison sur le vrai modèle médical.
+
 ## 7. Analyse d'erreurs
 
 `eval/error_register.csv` (généré par `eval/build_error_register.py`) contient les
@@ -127,6 +174,9 @@ Les 10 FN correspondent aux images `uncertain` (qualité limitée) que la baseli
 appelle `normal`. Chaque ligne du registre indique la prédiction baseline, la
 prédiction améliorée, la sévérité et l'action corrective. En mode amélioré, ces
 10 cas deviennent `uncertain` → 0 erreur résiduelle sur ce jeu.
+
+Une **analyse commentée à la main** des cas les plus instructifs (succès, échecs,
+sur-abstention) est disponible dans [`docs/error_analysis.md`](error_analysis.md).
 
 ## 8. Limites
 
@@ -164,8 +214,8 @@ prédiction améliorée, la sévérité et l'action corrective. En mode amélior
 ## 11. Preuves (commandes reproductibles)
 
 ```bash
-# 1. Tests de fumée (structure, schéma, garde-fous, API, éval)
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+# 1. Tests de fumée (structure, schéma, garde-fous, API, éval, robustesse)
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q            # 14 tests
 
 # 2. Évaluation baseline vs amélioration (écrit eval/results/ + logs SQLite)
 python eval/run_evaluation.py --mode toy
@@ -173,11 +223,24 @@ python eval/run_evaluation.py --mode toy
 # 3. Registre d'erreurs commenté (30 cas)
 python eval/build_error_register.py
 
-# 4. Démo web (une interface au choix)
+# 4. Analyse de sensibilité au seuil
+python eval/threshold_sweep.py
+
+# 5. Comparaison de prompts sur un vrai VLM (modèle ouvert accessible)
+python eval/run_vlm_comparison.py --model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9
+#   Modèle médical visé (accès gated + HF_TOKEN) :
+#   HF_TOKEN=... python eval/run_vlm_comparison.py --model google/medgemma-4b-it
+
+# 6. (Optionnel) Évaluer sur un échantillon réel autorisé — voir data/real/README.md
+python scripts/prepare_real_dataset.py --images data/real/images --labels data/real/labels.csv
+python eval/run_evaluation.py --mode toy --cases data/real/real_cases.csv
+
+# 7. Démo web (une interface au choix)
 streamlit run app/streamlit_app.py
 uvicorn api.main:app --reload   # puis POST /predict, GET /history
 ```
 
 Sorties de preuve : `eval/results/before_after_summary.csv`,
 `eval/results/{baseline,improved}_metrics.json`, `eval/results/*_confusion.csv`,
+`eval/results/threshold_sweep.csv`, `eval/results/vlm_before_after_summary.csv`,
 `eval/error_register.csv`, table `runs` de `medical_ai_evidence.sqlite`.

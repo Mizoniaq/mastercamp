@@ -28,8 +28,8 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         w.writeheader(); w.writerows(rows)
 
 
-def run(mode: str, db_path: Path) -> tuple[list[dict], dict]:
-    cases = read_cases(ROOT / 'data' / 'synthetic_cases.csv')
+def run(mode: str, db_path: Path, cases_csv: Path) -> tuple[list[dict], dict]:
+    cases = read_cases(cases_csv)
     rows = []
     init_db(db_path)
     for case in cases:
@@ -58,13 +58,15 @@ def main() -> None:
     parser.add_argument('--mode', choices=['toy', 'baseline', 'improved'], default='toy')
     parser.add_argument('--out-dir', type=Path, default=ROOT / 'eval' / 'results')
     parser.add_argument('--db-path', type=Path, default=ROOT / 'medical_ai_evidence.sqlite')
+    parser.add_argument('--cases', type=Path, default=ROOT / 'data' / 'synthetic_cases.csv',
+                        help='cases CSV (same schema as data/synthetic_cases.csv); point at a real sample')
     args = parser.parse_args()
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     modes = ['baseline', 'improved'] if args.mode == 'toy' else [args.mode]
     summary = []
     for mode in modes:
-        rows, metrics = run(mode, args.db_path)
+        rows, metrics = run(mode, args.db_path, args.cases)
         write_csv(out_dir / f'{mode}_predictions.csv', rows)
         (out_dir / f'{mode}_metrics.json').write_text(json.dumps(metrics, indent=2), encoding='utf-8')
         # Confusion matrix per mode, useful for error analysis and the report.

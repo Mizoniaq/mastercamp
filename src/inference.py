@@ -12,7 +12,9 @@ from .preprocessing import extract_features, quality_from_features
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = ROOT / "prompts"
 
-MODEL_ID = "google/medgemma-4b-it"
+# Intended medical model (gated: needs HF_TOKEN + accepted licence). Override with
+# the MODEL_ID env var to point at any open image-text-to-text VLM.
+MODEL_ID = os.environ.get("MODEL_ID", "google/medgemma-4b-it")
 WARNING = "Prototype pédagogique. Non destiné au diagnostic. Validation par un professionnel qualifié requise."
 
 # Decision thresholds for the transparent toy classifier.
@@ -25,7 +27,8 @@ CONFIDENCE_ABSTAIN_THRESHOLD = 0.60
 
 BASE_LIMITATIONS = ["synthetic toy image", "no clinical context", "not a validated medical model"]
 
-_PIPE = None
+# Pipelines are cached per model id so the harness can reuse a loaded model.
+_PIPES: dict[str, Any] = {}
 
 
 def _clip(value: float, low: float, high: float) -> float:
@@ -58,7 +61,11 @@ def _raw_decision(features: dict[str, float]) -> tuple[str, float, list[str]]:
     return "normal", round(confidence, 3), evidence
 
 
-def toy_predict(image_path: str | Path, mode: str = "baseline") -> dict[str, Any]:
+def toy_predict(
+    image_path: str | Path,
+    mode: str = "baseline",
+    limited_contrast_std: float | None = None,
+) -> dict[str, Any]:
     """Transparent image-feature classifier used to validate the repo pipeline.
 
     It reads simple grayscale statistics from the image (not the filename) and
@@ -69,12 +76,16 @@ def toy_predict(image_path: str | Path, mode: str = "baseline") -> dict[str, Any
       when image quality is limited/poor or when confidence is below
       ``CONFIDENCE_ABSTAIN_THRESHOLD``.
 
-    This is a reproducible software validation, not medical inference. It runs
-    with no GPU and no network so it works in CI and in the smoke test.
+    ``limited_contrast_std`` overrides the quality threshold (for the sensitivity
+    analysis). This is a reproducible software validation, not medical inference.
+    It runs with no GPU and no network so it works in CI and in the smoke test.
     """
     start = time.perf_counter()
     features = extract_features(image_path)
-    quality = quality_from_features(features)
+    if limited_contrast_std is None:
+        quality = quality_from_features(features)
+    else:
+        quality = quality_from_features(features, limited_std=limited_contrast_std)
 
     predicted_class, confidence, evidence = _raw_decision(features)
     limitations = list(BASE_LIMITATIONS)
@@ -111,6 +122,33 @@ def toy_predict(image_path: str | Path, mode: str = "baseline") -> dict[str, Any
     }
 
 
+def robust_predict(image_path: str | Path, mode: str = "improved") -> dict[str, Any]:
+    """Toy prediction that never raises on a bad upload.
+
+    A corrupt or non-image file falls back to a safe "uncertain" output (with the
+    mandatory warning) instead of crashing the web demo.
+    """
+    try:
+        return toy_predict(image_path, mode=mode)
+    except Exception as exc:  # unreadable / unsupported input
+        return {
+            "image_quality": "poor",
+            "predicted_class": "uncertain",
+            "confidence": 0.0,
+            "visual_evidence": ["input could not be read as an image"],
+            "justification": (
+                "The uploaded file could not be decoded as an image, so no analysis is possible "
+                "and the safe output is uncertainty."
+            ),
+            "limitations": BASE_LIMITATIONS + ["unreadable or unsupported input"],
+            "warning": WARNING,
+            "model_name": f"toy-imgfeat-{mode}",
+            "prompt_version": f"{mode}_v1",
+            "latency_ms": 0,
+            "input_error": str(exc),
+        }
+
+
 def _justify(predicted_class: str, mode: str) -> str:
     """Return a cautious, evidence-based justification for the toy output."""
     if predicted_class == "suspected_opacity":
@@ -135,76 +173,81 @@ def load_prompt(mode: str = "baseline") -> str:
     return (PROMPTS_DIR / filename).read_text(encoding="utf-8")
 
 
-def get_pipeline():
-    """Lazily load the MedGemma pipeline once and reuse it for all predictions.
+def get_pipeline(model_id: str | None = None):
+    """Lazily load an image-text-to-text VLM pipeline and cache it per model id.
 
-    Requires the HF_TOKEN environment variable to be set (never hardcode a
-    token in source). Picks CUDA if available, otherwise falls back to CPU;
-    "mps" is Apple-Silicon-only and must not be assumed here.
+    ``HF_TOKEN`` is only required for gated models (e.g. MedGemma); open models
+    load without it. Picks CUDA if available, otherwise CPU; "mps" is
+    Apple-Silicon-only and must not be assumed here.
     """
-    global _PIPE
-
-    if _PIPE is not None:
-        return _PIPE
-
-    hf_token = os.environ.get("HF_TOKEN")
-    if not hf_token:
-        raise RuntimeError(
-            "HF_TOKEN environment variable is not set. "
-            "Set it before starting the app, for example: "
-            "export HF_TOKEN='<your-huggingface-token>'"
-        )
+    model_id = model_id or MODEL_ID
+    if model_id in _PIPES:
+        return _PIPES[model_id]
 
     from transformers import pipeline
     import torch
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    _PIPE = pipeline(
+    use_cuda = torch.cuda.is_available()
+    pipe = pipeline(
         "image-text-to-text",
-        model=MODEL_ID,
-        torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
-        device=device,
-        token=hf_token,
+        model=model_id,
+        torch_dtype=torch.bfloat16 if use_cuda else torch.float32,
+        device="cuda" if use_cuda else "cpu",
+        token=os.environ.get("HF_TOKEN"),  # None is fine for open models
     )
+    _PIPES[model_id] = pipe
+    return pipe
 
-    return _PIPE
 
+def vlm_predict(image_path: str | Path, mode: str = "baseline", model_id: str | None = None) -> dict[str, Any]:
+    """Run a real VLM on a chest X-ray using the prompt file matching ``mode``.
 
-def medgemma_predict(image_path: str | Path, mode: str = "baseline") -> dict[str, Any]:
-    """Run real MedGemma inference on a chest X-ray image.
-
-    Optional live path: not used by the default toy smoke test, eval, API or
-    Streamlit flows, since it requires HF_TOKEN, network access and a
-    multi-GB model download. Uses the prompt file matching ``mode``.
+    Optional live path (not used by the default toy smoke test/eval/API/Streamlit):
+    it requires a model download and, for gated models, HF_TOKEN. Works with any
+    open image-text-to-text model via ``model_id`` / the MODEL_ID env var.
     """
     from PIL import Image
 
+    model_id = model_id or MODEL_ID
     start = time.perf_counter()
-    pipe = get_pipeline()
+    pipe = get_pipeline(model_id)
     prompt_text = load_prompt(mode)
 
     image = Image.open(image_path).convert("RGB")
+    # Fold the prompt into a single user turn (image first) for broad model
+    # compatibility: some chat templates (e.g. Gemma family) reject a system turn.
     messages = [
-        {"role": "system", "content": [{"type": "text", "text": prompt_text}]},
         {
             "role": "user",
             "content": [
                 {"type": "image", "image": image},
-                {"type": "text", "text": "Describe this X-ray"},
+                {"type": "text", "text": prompt_text + "\n\nAnswer with the required JSON only."},
             ],
         },
     ]
 
-    output = pipe(text=messages, max_new_tokens=2000)
+    max_new_tokens = int(os.environ.get("VLM_MAX_NEW_TOKENS", "512"))
+    output = pipe(text=messages, max_new_tokens=max_new_tokens)
     text = output[0]["generated_text"][-1]["content"]
     latency_ms = int((time.perf_counter() - start) * 1000)
 
-    data = parse_model_json(text)
-    data.setdefault("model_name", MODEL_ID)
-    data.setdefault("prompt_version", f"{mode}_v1")
+    try:
+        data = parse_model_json(text)
+    except ValueError:
+        # Real models do not always return valid JSON; the guardrails downstream
+        # turn this into a safe "uncertain". We keep the raw text for auditing.
+        data = {"predicted_class": "uncertain", "raw_text": text[:500], "json_error": True}
+
+    data.setdefault("model_name", model_id)
+    data["prompt_version"] = f"{mode}_v1"
     data["latency_ms"] = latency_ms
     return data
+
+
+# Backwards-compatible alias for the intended medical model.
+def medgemma_predict(image_path: str | Path, mode: str = "baseline") -> dict[str, Any]:
+    """Convenience wrapper: real inference with the MedGemma model id."""
+    return vlm_predict(image_path, mode=mode, model_id=MODEL_ID)
 
 
 def parse_model_json(text: str) -> dict[str, Any]:
