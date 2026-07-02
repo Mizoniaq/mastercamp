@@ -52,6 +52,11 @@ focale brillante** (proxy d'opacité) :
 | `suspected_opacity` | ~19.1 | ~86 | 1.2–2.5 % |
 | `uncertain` (qualité limitée) | ~10.5 | ~44 | ~0.07 % |
 
+**Jeu réel de validation** : en complément, 30 vraies radiographies publiques du
+dataset Kaggle *Chest X-Ray Images (Pneumonia)* (15 `normal` + 15 `suspected_opacity`)
+servent à valider le vrai modèle médical (voir §6.3). Source et licence citées au
+§10 ; les images ne sont **pas** redistribuées (dossier `data/real/` gitignoré).
+
 ## 4. Stratégie baseline
 
 `toy_predict(mode="baseline")` (`src/inference.py`) est un **classifieur d'image
@@ -264,10 +269,24 @@ sur-abstention) est disponible dans [`docs/error_analysis.md`](error_analysis.md
 - Dépendances Python : voir `requirements.txt` / `requirements-test.txt`. Le mode
   jouet n'utilise que `numpy`, `pillow`, `pandas` (+ `fastapi`/`streamlit` pour
   les interfaces). Le connecteur réel ajoute `transformers`, `torch`, `accelerate`.
-- Datasets/modèles externes (**licences propres, à documenter avant tout usage**) :
-  MedGemma (`google/medgemma-4b-*`), Gemma 4 / Unsloth, MIMIC-CXR, CheXpert. Voir
-  le tableau des références dans le [README](../README.md) et `docs/appel_offre.md`.
-- Variable d'environnement : `HF_TOKEN` (jamais commitée ; voir `.env.example`).
+- **Modèle réellement utilisé** : `google/medgemma-4b-it` (Google, 4B, image-texte,
+  instruction-tuned). Accès *gated* sur Hugging Face sous **Health AI Developer
+  Foundations Terms of Use** — acceptation de licence requise + `HF_TOKEN`.
+  Réf. : <https://huggingface.co/google/medgemma-4b-it>.
+- **Dataset réel réellement utilisé** (validation §6.3) : *Chest X-Ray Images
+  (Pneumonia)*, Paul T. Mooney, **Kaggle** — dérivé de Kermany D. et al.,
+  *Identifying Medical Diagnoses and Treatable Diseases by Image-Based Deep
+  Learning*, **Cell 2018**. Licence **CC BY 4.0**, usage recherche, **non
+  redistribué** dans ce dépôt (images gitignorées, `data/real/`).
+  Réf. : <https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia>.
+- Modèle ouvert de validation du harnais : `HuggingFaceTB/SmolVLM-256M-Instruct`
+  (Apache-2.0), non médical.
+- Autres ressources citées mais **non utilisées** (pistes) : Gemma 4 / Unsloth,
+  MIMIC-CXR (PhysioNet, accès crédentialé), CheXpert (Stanford AIMI). Voir le
+  tableau du [README](../README.md) et `docs/appel_offre.md`.
+- Dépendances Python : `requirements.txt` (mode jouet : `numpy`, `pillow`,
+  `pandas`, + `fastapi`/`streamlit` ; connecteur réel : `transformers`, `torch`,
+  `accelerate`). Variable d'environnement : `HF_TOKEN` (jamais commitée ; `.env.example`).
 
 ## 11. Preuves (commandes reproductibles)
 
