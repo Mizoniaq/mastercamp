@@ -1,0 +1,31 @@
+case_id,ground_truth,baseline_prediction,improved_prediction,baseline_confidence,improved_confidence,error_type,severity,comment,corrective_action
+CXR_SYN_001,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_002,suspected_opacity,suspected_opacity,suspected_opacity,0.718,0.718,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_003,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_004,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_005,suspected_opacity,suspected_opacity,suspected_opacity,0.848,0.848,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_006,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_007,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_008,suspected_opacity,suspected_opacity,suspected_opacity,0.718,0.718,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_009,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_010,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_011,suspected_opacity,suspected_opacity,suspected_opacity,0.849,0.849,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_012,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_013,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_014,suspected_opacity,suspected_opacity,suspected_opacity,0.718,0.718,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_015,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_016,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_017,suspected_opacity,suspected_opacity,suspected_opacity,0.719,0.719,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_018,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_019,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_020,suspected_opacity,suspected_opacity,suspected_opacity,0.718,0.718,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_021,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_022,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_023,suspected_opacity,suspected_opacity,suspected_opacity,0.719,0.719,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_024,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_025,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_026,suspected_opacity,suspected_opacity,suspected_opacity,0.718,0.718,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_027,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.
+CXR_SYN_028,normal,normal,normal,0.775,0.775,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_029,suspected_opacity,suspected_opacity,suspected_opacity,0.719,0.719,OK,none,Baseline classe correctement ce cas.,Aucune correction nécessaire (comportement identique).
+CXR_SYN_030,uncertain,normal,uncertain,0.835,0.5,FN,high,Baseline force une classe rassurante alors que l'image est anormale ou illisible.,La règle d'incertitude (qualité + seuil 0.60) corrige le cas en mode amélioré.

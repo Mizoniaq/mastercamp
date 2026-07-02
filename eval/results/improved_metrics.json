@@ -1,0 +1,11 @@
+{
+  "n": 30,
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "sensitivity": 1.0,
+  "specificity": 1.0,
+  "json_valid_rate": 1.0,
+  "warning_rate": 1.0,
+  "uncertain_rate": 0.3333,
+  "latency_ms_median": 3.0
+}
