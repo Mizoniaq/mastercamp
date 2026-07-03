@@ -13,6 +13,32 @@ ALLOWED_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp"}
 POOR_CONTRAST_STD = 8.0
 LIMITED_CONTRAST_STD = 13.0
 
+# A frontal chest X-ray is essentially grayscale (R≈G≈B). A colour photo (a cat,
+# a selfie, a screenshot) has a much higher mean channel spread. Above this
+# saturation, the input is rejected as "not a radiograph".
+MAX_CXR_SATURATION = 18.0
+
+
+def is_probably_cxr(path: str | Path) -> tuple[bool, str]:
+    """Cheap, transparent gate: does this image plausibly look like a CXR?
+
+    Primary signal = grayscale-ness (colour images are rejected). This is a
+    heuristic, not an out-of-distribution detector: it reliably rejects colour
+    photos but cannot catch a grayscale non-medical image. A dedicated
+    "is-this-a-chest-X-ray?" classifier would be the robust production solution.
+    """
+    arr = np.asarray(Image.open(path).convert("RGB"), dtype=np.float64)
+    if arr.ndim != 3 or arr.shape[2] < 3:
+        return True, ""  # already single-channel -> treat as grayscale/plausible
+    spread = arr.max(axis=2) - arr.min(axis=2)  # 0 for a pure-gray pixel
+    mean_saturation = float(spread.mean())
+    if mean_saturation > MAX_CXR_SATURATION:
+        return False, (
+            f"image en couleur détectée (saturation {mean_saturation:.0f}) — "
+            "une radiographie thoracique est en niveaux de gris"
+        )
+    return True, ""
+
 
 def load_image(path: str | Path, size: tuple[int, int] = (512, 512)) -> Image.Image:
     """Load an image safely for the educational prototype.

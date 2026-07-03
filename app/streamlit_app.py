@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.guardrails import WARNING_TEXT, apply_safety_guardrails
-from src.inference import robust_predict, vlm_predict
+from src.inference import robust_predict, vlm_predict, rejection_result
+from src.preprocessing import is_probably_cxr
 from src.database import fetch_recent_runs, log_prediction
 
 SAMPLE_DIR = ROOT / "data" / "sample_images"
@@ -139,6 +140,10 @@ def render_prediction_card(pred: dict) -> None:
 
 
 def predict(image_path: Path, mode: str, engine: str) -> dict:
+    # Garde d'entrée : refuser ce qui n'est pas une radiographie (avant tout moteur).
+    ok, reason = is_probably_cxr(image_path)
+    if not ok:
+        return apply_safety_guardrails(rejection_result(reason, mode=mode))
     if engine == "medgemma":
         with st.spinner("MedGemma analyse la radiographie… (~30 s ; chargement du modèle au 1er appel)"):
             try:
@@ -192,7 +197,12 @@ def tab_prediction() -> None:
     with col_res:
         st.markdown("**Résultat**")
         pred = predict(image_path, mode, engine)
-        render_prediction_card(pred)
+        if pred.get("input_rejected"):
+            st.error(f"⛔ Image refusée — {pred.get('reject_reason', 'entrée hors périmètre')}", icon="🚫")
+            st.caption("Cette image ne semble pas être une radiographie thoracique frontale. "
+                       "Aucune classification n'est produite (garde d'entrée).")
+        else:
+            render_prediction_card(pred)
         log_prediction(case_id=Path(image_name).stem, image_path=str(image_path), prediction=pred)
         with st.expander("Sortie JSON structurée"):
             st.json(pred)

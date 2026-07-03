@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Rapport — Assistant radiologue virtuel responsable (EFREI)</title>
+  <title>Rapport EFREI</title>
   <style>
 
 html {
@@ -235,8 +235,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Rapport — Assistant radiologue virtuel responsable
-(EFREI)</h1>
+<h1 class="title">Rapport EFREI</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -306,6 +305,14 @@ d’erreurs.</p>
 <ul>
 <li><strong>Entrée</strong> : une radiographie thoracique frontale
 (image PNG/JPG).</li>
+<li><strong>Garde d’entrée</strong> : une image qui n’est pas
+plausiblement une radiographie (photo en <strong>couleur</strong> :
+chat, selfie…) est <strong>refusée avant toute analyse</strong>
+(<code>src/preprocessing.py:is_probably_cxr</code>, détection de
+saturation). L’outil ne doit pas classer une image hors périmètre.
+Heuristique transparente : elle rejette les images couleur mais ne
+remplace pas un détecteur dédié « est-ce une radio ? » (limite
+assumée).</li>
 <li><strong>Sorties</strong> : <code>normal</code>,
 <code>suspected_opacity</code>, <code>uncertain</code>.</li>
 <li>La classe <code>uncertain</code> est un <strong>garde-fou

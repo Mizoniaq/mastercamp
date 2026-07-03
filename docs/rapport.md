@@ -22,6 +22,12 @@ garde-fous, métriques, journalisation et analyse d'erreurs.
 ## 2. Périmètre
 
 - **Entrée** : une radiographie thoracique frontale (image PNG/JPG).
+- **Garde d'entrée** : une image qui n'est pas plausiblement une radiographie
+  (photo en **couleur** : chat, selfie…) est **refusée avant toute analyse**
+  (`src/preprocessing.py:is_probably_cxr`, détection de saturation). L'outil ne
+  doit pas classer une image hors périmètre. Heuristique transparente : elle
+  rejette les images couleur mais ne remplace pas un détecteur dédié « est-ce une
+  radio ? » (limite assumée).
 - **Sorties** : `normal`, `suspected_opacity`, `uncertain`.
 - La classe `uncertain` est un **garde-fou méthodologique** : savoir ne pas
   conclure sur une image ambiguë ou de mauvaise qualité fait partie de la qualité

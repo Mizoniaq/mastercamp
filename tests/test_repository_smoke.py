@@ -247,6 +247,27 @@ def test_guardrails_survive_non_numeric_confidence() -> None:
     assert pred["warning"] == WARNING_TEXT
 
 
+def test_input_gate_rejects_non_cxr(tmp_path) -> None:
+    import numpy as np
+    from PIL import Image
+
+    # A colour image (e.g. a cat photo) must be refused, not classified.
+    color = np.zeros((64, 64, 3), dtype="uint8")
+    color[..., 0] = 210
+    color[..., 2] = 40
+    cat = tmp_path / "cat.png"
+    Image.fromarray(color).save(cat)
+    pred = apply_safety_guardrails(robust_predict(cat, mode="improved"))
+    assert pred.get("input_rejected") is True
+    assert pred["predicted_class"] == "uncertain"
+    assert pred["warning"] == WARNING_TEXT
+
+    # A real (grayscale) chest X-ray is accepted.
+    cxr = ROOT / "data" / "sample_images" / "CXR_SYN_001_normal.png"
+    ok_pred = apply_safety_guardrails(robust_predict(cxr, mode="improved"))
+    assert not ok_pred.get("input_rejected")
+
+
 def test_overclaim_detector_flags_clinical_language() -> None:
     over = detect_overclaim({"justification": "Diagnosis confirmed: pneumonia with pleural effusion.", "visual_evidence": []})
     cautious = detect_overclaim({"justification": "A focal bright region compatible with the toy marker.", "visual_evidence": ["bright area"]})

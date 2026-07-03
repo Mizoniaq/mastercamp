@@ -7,7 +7,7 @@ import re
 import json
 from typing import Any
 
-from .preprocessing import extract_features, quality_from_features
+from .preprocessing import extract_features, quality_from_features, is_probably_cxr
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = ROOT / "prompts"
@@ -122,13 +122,38 @@ def toy_predict(
     }
 
 
+def rejection_result(reason: str, mode: str = "improved") -> dict[str, Any]:
+    """Schema-valid response for an out-of-scope input (not a chest X-ray)."""
+    return {
+        "image_quality": "poor",
+        "predicted_class": "uncertain",
+        "confidence": 0.0,
+        "visual_evidence": [reason],
+        "justification": (
+            "L'image fournie ne semble pas être une radiographie thoracique frontale ; "
+            "l'analyse est refusée par sécurité."
+        ),
+        "limitations": BASE_LIMITATIONS + ["entrée hors périmètre (non-radiographie)"],
+        "warning": WARNING,
+        "model_name": "input-gate",
+        "prompt_version": f"{mode}_v1",
+        "latency_ms": 0,
+        "input_rejected": True,
+        "reject_reason": reason,
+    }
+
+
 def robust_predict(image_path: str | Path, mode: str = "improved") -> dict[str, Any]:
     """Toy prediction that never raises on a bad upload.
 
-    A corrupt or non-image file falls back to a safe "uncertain" output (with the
-    mandatory warning) instead of crashing the web demo.
+    Rejects inputs that are not plausibly a chest X-ray (colour photos), and falls
+    back to a safe "uncertain" output on a corrupt/undecodable file — always with
+    the mandatory warning, never a crash.
     """
     try:
+        ok, reason = is_probably_cxr(image_path)
+        if not ok:
+            return rejection_result(reason, mode=mode)
         return toy_predict(image_path, mode=mode)
     except Exception as exc:  # unreadable / unsupported input
         return {
