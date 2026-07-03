@@ -115,7 +115,26 @@ python eval/run_vlm_comparison.py --model google/medgemma-4b-it
 Sans accès *gated*, un modèle ouvert valide le harnais :
 `--model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9`.
 
-Pour évaluer sur de **vraies radios**, voir [`data/real/README.md`](data/real/README.md).
+### Évaluer sur de vraies radios (dataset Kaggle)
+
+Aucune image réelle n'est incluse dans le dépôt (licence + confidentialité). Pour
+en ajouter un petit échantillon autorisé :
+
+```bash
+# 1. Télécharger le dataset public (compte Kaggle + kaggle.json requis)
+pip install kaggle
+kaggle datasets download -d paultimothymooney/chest-xray-pneumonia -p data/real --unzip
+
+# 2. Construire le catalogue (labels déduits des dossiers NORMAL/PNEUMONIA)
+python scripts/prepare_real_dataset.py --images data/real/chest_xray --per-class 15
+
+# 3. Évaluer MedGemma sur ces vraies radios
+python eval/run_vlm_comparison.py --model google/medgemma-4b-it --cases data/real/real_cases.csv --limit 0
+```
+
+`NORMAL` → `normal`, `PNEUMONIA` → `suspected_opacity`. Les images restent
+**gitignorées**. Sources, licences et détails : [`data/real/README.md`](data/real/README.md).
+Pensez à **citer la source et la licence** du dataset dans le rapport.
 
 ---
 
