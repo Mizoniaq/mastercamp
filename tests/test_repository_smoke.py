@@ -60,6 +60,8 @@ def test_repository_student_contract_is_present() -> None:
         "eval/error_register.csv",
         "scripts/prepare_real_dataset.py",
         "finetuning/train_cxr_classifier.py",
+        "src/input_gate.py",
+        "src/artifacts/cxr_ood.npz",
         "docs/rapport.md",
         "docs/error_analysis.md",
         "prompts/json_schema.md",
@@ -266,6 +268,21 @@ def test_input_gate_rejects_non_cxr(tmp_path) -> None:
     cxr = ROOT / "data" / "sample_images" / "CXR_SYN_001_normal.png"
     ok_pred = apply_safety_guardrails(robust_predict(cxr, mode="improved"))
     assert not ok_pred.get("input_rejected")
+
+
+def test_deep_ood_rejects_grayscale_non_cxr(tmp_path) -> None:
+    import numpy as np
+    from PIL import Image
+    from src.input_gate import gate_input, cxr_ood_score
+
+    grad = np.tile(np.linspace(0, 255, 128).astype("uint8"), (128, 1))
+    p = tmp_path / "grad.png"
+    Image.fromarray(grad).save(p)  # grayscale -> passes the colour check
+    if cxr_ood_score(p) is None:
+        import pytest
+        pytest.skip("deep OOD detector unavailable (no torch/torchvision/artifact)")
+    ok, _ = gate_input(p)
+    assert not ok  # a grayscale non-radiograph is caught by the OOD detector
 
 
 def test_overclaim_detector_flags_clinical_language() -> None:

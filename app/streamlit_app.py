@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.guardrails import WARNING_TEXT, apply_safety_guardrails
 from src.inference import robust_predict, vlm_predict, rejection_result
-from src.preprocessing import is_probably_cxr
+from src.input_gate import gate_input
 from src.database import fetch_recent_runs, log_prediction
 
 SAMPLE_DIR = ROOT / "data" / "sample_images"
@@ -140,8 +140,12 @@ def render_prediction_card(pred: dict) -> None:
 
 
 def predict(image_path: Path, mode: str, engine: str) -> dict:
-    # Garde d'entrée : refuser ce qui n'est pas une radiographie (avant tout moteur).
-    ok, reason = is_probably_cxr(image_path)
+    # Garde d'entrée (couleur + détecteur OOD) : refuser ce qui n'est pas une
+    # radiographie, avant tout moteur. Un fichier corrompu retombe sur robust_predict.
+    try:
+        ok, reason = gate_input(image_path)
+    except Exception:
+        return apply_safety_guardrails(robust_predict(image_path, mode=mode))
     if not ok:
         return apply_safety_guardrails(rejection_result(reason, mode=mode))
     if engine == "medgemma":

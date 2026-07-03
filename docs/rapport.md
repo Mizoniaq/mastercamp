@@ -22,12 +22,17 @@ garde-fous, métriques, journalisation et analyse d'erreurs.
 ## 2. Périmètre
 
 - **Entrée** : une radiographie thoracique frontale (image PNG/JPG).
-- **Garde d'entrée** : une image qui n'est pas plausiblement une radiographie
-  (photo en **couleur** : chat, selfie…) est **refusée avant toute analyse**
-  (`src/preprocessing.py:is_probably_cxr`, détection de saturation). L'outil ne
-  doit pas classer une image hors périmètre. Heuristique transparente : elle
-  rejette les images couleur mais ne remplace pas un détecteur dédié « est-ce une
-  radio ? » (limite assumée).
+- **Garde d'entrée** (deux niveaux, `src/input_gate.py`) : une image qui n'est pas
+  une radiographie est **refusée avant toute analyse**.
+  1. **Couleur** (`is_probably_cxr`) : une radio est en niveaux de gris → les
+     photos couleur (chat, selfie) sont rejetées instantanément.
+  2. **Détecteur OOD** (`finetuning/build_ood_detector.py`) : features ResNet18
+     (ImageNet) → PCA → **distance de Mahalanobis** à la distribution des vraies
+     radios (seuil calibré sur des radios held-out). Rejette les non-radiographies
+     que la couleur manque — **y compris un chat en niveaux de gris**. Séparation
+     mesurée : radios ≤ 75, seuil 82, images hors périmètre ≥ 86.
+  Repli gracieux : sans torch, seule la vérification couleur s'applique. Limite
+  assumée : la marge OOD reste modérée sur ce petit jeu.
 - **Sorties** : `normal`, `suspected_opacity`, `uncertain`.
 - La classe `uncertain` est un **garde-fou méthodologique** : savoir ne pas
   conclure sur une image ambiguë ou de mauvaise qualité fait partie de la qualité

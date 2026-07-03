@@ -305,14 +305,23 @@ d’erreurs.</p>
 <ul>
 <li><strong>Entrée</strong> : une radiographie thoracique frontale
 (image PNG/JPG).</li>
-<li><strong>Garde d’entrée</strong> : une image qui n’est pas
-plausiblement une radiographie (photo en <strong>couleur</strong> :
-chat, selfie…) est <strong>refusée avant toute analyse</strong>
-(<code>src/preprocessing.py:is_probably_cxr</code>, détection de
-saturation). L’outil ne doit pas classer une image hors périmètre.
-Heuristique transparente : elle rejette les images couleur mais ne
-remplace pas un détecteur dédié « est-ce une radio ? » (limite
-assumée).</li>
+<li><strong>Garde d’entrée</strong> (deux niveaux,
+<code>src/input_gate.py</code>) : une image qui n’est pas une
+radiographie est <strong>refusée avant toute analyse</strong>.
+<ol type="1">
+<li><strong>Couleur</strong> (<code>is_probably_cxr</code>) : une radio
+est en niveaux de gris → les photos couleur (chat, selfie) sont rejetées
+instantanément.</li>
+<li><strong>Détecteur OOD</strong>
+(<code>finetuning/build_ood_detector.py</code>) : features ResNet18
+(ImageNet) → PCA → <strong>distance de Mahalanobis</strong> à la
+distribution des vraies radios (seuil calibré sur des radios held-out).
+Rejette les non-radiographies que la couleur manque — <strong>y compris
+un chat en niveaux de gris</strong>. Séparation mesurée : radios ≤ 75,
+seuil 82, images hors périmètre ≥ 86. Repli gracieux : sans torch, seule
+la vérification couleur s’applique. Limite assumée : la marge OOD reste
+modérée sur ce petit jeu.</li>
+</ol></li>
 <li><strong>Sorties</strong> : <code>normal</code>,
 <code>suspected_opacity</code>, <code>uncertain</code>.</li>
 <li>La classe <code>uncertain</code> est un <strong>garde-fou
