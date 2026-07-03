@@ -20,9 +20,10 @@ ENV/
 htmlcov/
 .ipynb_checkpoints/
 
-# ── IDE / OS ─────────────────────────────────────────────────────────────
+# ── IDE / OS / outils ────────────────────────────────────────────────────
 .vscode/
 .idea/
+.claude/
 .DS_Store
 Thumbs.db
 
