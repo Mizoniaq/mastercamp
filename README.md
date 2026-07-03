@@ -5,6 +5,9 @@
 > **École :** EFREI  
 > **Année académique :** 2025-2026
 
+> ### 🚀 Pour installer et lancer le projet : **[→ Guide de démarrage (QUICKSTART.md)](QUICKSTART.md)**
+> Guide pas à pas pour n'importe quelle machine (Windows / macOS / Linux), sans prérequis.
+
 ## Contexte
 
 Prototype pédagogique d'IA médicale multimodale pour apprendre à construire une chaîne **prudente, traçable et évaluée** autour d'une radiographie thoracique frontale.
