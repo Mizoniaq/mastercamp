@@ -1,0 +1,11 @@
+# Thème de l'application (interface propre, cohérente en clair).
+[theme]
+base = "light"
+primaryColor = "#2563eb"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f5f7fa"
+textColor = "#111827"
+font = "sans serif"
+
+[server]
+headless = true
