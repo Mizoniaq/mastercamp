@@ -93,6 +93,23 @@ sortie invalide.
 
 ## 6. Métriques (résultats reproductibles)
 
+**Récapitulatif — les 8 métriques exigées sont toutes calculées** (7 dans l'éval
+jouet via `src/metrics.py`, la 8ᵉ — hallucination — dans la comparaison VLM via
+`detect_overclaim`, car un classifieur à règles ne peut pas halluciner) :
+
+| Métrique exigée | Calculée | Exemple de valeur (améliorée jouet / MedGemma réel) |
+|---|:--:|---|
+| Accuracy | ✅ | 1.000 / 0.767 |
+| Macro-F1 | ✅ | 1.000 / 0.566 |
+| Sensibilité | ✅ | 1.000 / 0.667 |
+| Spécificité | ✅ | 1.000 / 0.867 |
+| Validité JSON | ✅ | 1.000 / 1.000 |
+| Latence médiane | ✅ | ~3 ms / ~27 s |
+| Taux d'incertitude | ✅ | 0.333 / 0.133 |
+| Hallucination / justif. non fondée | ✅ | (jouet : n/a) / 0.933→0.800 |
+
+### 6.0 Détail sur le jeu jouet
+
 Évaluation sur les 30 cas (`python eval/run_evaluation.py --mode toy`) :
 
 | Métrique | Baseline | Amélioration |

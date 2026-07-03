@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Rapport — Assistant radiologue virtuel responsable (EFREI)</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Rapport — Assistant radiologue virtuel responsable
+(EFREI)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#mini-rapport-assistant-radiologue-virtuel-responsable" id="toc-mini-rapport-assistant-radiologue-virtuel-responsable">Mini-rapport
+— Assistant radiologue virtuel responsable</a>
+<ul>
+<li><a href="#objectif" id="toc-objectif">1. Objectif</a></li>
+<li><a href="#périmètre" id="toc-périmètre">2. Périmètre</a></li>
+<li><a href="#données" id="toc-données">3. Données</a></li>
+<li><a href="#stratégie-baseline" id="toc-stratégie-baseline">4.
+Stratégie baseline</a></li>
+<li><a href="#amélioration-règle-dincertitude-explicite" id="toc-amélioration-règle-dincertitude-explicite">5. Amélioration
+(règle d’incertitude explicite)</a></li>
+<li><a href="#métriques-résultats-reproductibles" id="toc-métriques-résultats-reproductibles">6. Métriques (résultats
+reproductibles)</a>
+<ul>
+<li><a href="#détail-sur-le-jeu-jouet" id="toc-détail-sur-le-jeu-jouet">6.0 Détail sur le jeu jouet</a></li>
+<li><a href="#sensibilité-au-seuil-analyse-dablation" id="toc-sensibilité-au-seuil-analyse-dablation">6.1 Sensibilité au seuil
+(analyse d’ablation)</a></li>
+<li><a href="#comparaison-de-prompts-sur-un-vrai-vlm-métrique-dhallucination" id="toc-comparaison-de-prompts-sur-un-vrai-vlm-métrique-dhallucination">6.2
+Comparaison de prompts sur un vrai VLM + métrique
+d’hallucination</a></li>
+<li><a href="#validation-sur-données-réelles-le-résultat-le-plus-instructif" id="toc-validation-sur-données-réelles-le-résultat-le-plus-instructif">6.3
+Validation sur données réelles (le résultat le plus instructif)</a></li>
+</ul></li>
+<li><a href="#analyse-derreurs" id="toc-analyse-derreurs">7. Analyse
+d’erreurs</a></li>
+<li><a href="#limites" id="toc-limites">8. Limites</a></li>
+<li><a href="#risques-et-précautions-éthiques" id="toc-risques-et-précautions-éthiques">9. Risques et précautions
+éthiques</a></li>
+<li><a href="#dépendances-et-licences" id="toc-dépendances-et-licences">10. Dépendances et licences</a></li>
+<li><a href="#preuves-commandes-reproductibles" id="toc-preuves-commandes-reproductibles">11. Preuves (commandes
+reproductibles)</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="mini-rapport-assistant-radiologue-virtuel-responsable">Mini-rapport
+— Assistant radiologue virtuel responsable</h1>
+<blockquote>
+<p><strong>Prototype pédagogique. Non destiné au diagnostic. Validation
+par un professionnel qualifié requise.</strong></p>
+<p>EFREI — Solution Delivery, filière Data — 2025-2026</p>
+</blockquote>
+<p>Ce rapport documente le prototype livré : objectif, périmètre,
+données, stratégie baseline, amélioration mesurée, métriques, limites,
+risques, précautions éthiques et dépendances. Il s’appuie sur des
+résultats <strong>reproductibles</strong> (voir §10 Preuves).</p>
+<hr />
+<h2 id="objectif">1. Objectif</h2>
+<p>Construire une chaîne d’analyse <strong>prudente, traçable et
+évaluée</strong> autour d’une radiographie thoracique frontale. Le
+système reçoit une image et retourne une sortie JSON structurée (classe,
+confiance, observations, justification, limites, avertissement). Le but
+n’est <strong>pas</strong> le diagnostic mais la démonstration d’une
+démarche d’ingénierie responsable : périmètre restreint, baseline
+reproductible, garde-fous, métriques, journalisation et analyse
+d’erreurs.</p>
+<h2 id="périmètre">2. Périmètre</h2>
+<ul>
+<li><strong>Entrée</strong> : une radiographie thoracique frontale
+(image PNG/JPG).</li>
+<li><strong>Sorties</strong> : <code>normal</code>,
+<code>suspected_opacity</code>, <code>uncertain</code>.</li>
+<li>La classe <code>uncertain</code> est un <strong>garde-fou
+méthodologique</strong> : savoir ne pas conclure sur une image ambiguë
+ou de mauvaise qualité fait partie de la qualité attendue.</li>
+<li><strong>Hors périmètre</strong> : diagnostic, tri, orientation
+patient, données réelles identifiantes, promesse de performance
+clinique.</li>
+</ul>
+<h2 id="données">3. Données</h2>
+<p>Jeu <strong>synthétique jouet</strong> : 30 images 512×512
+(<code>data/sample_images/</code>) décrites par
+<code>data/synthetic_cases.csv</code> (colonnes
+<code>case_id, image_path, source, label, split, quality, notes</code>).
+Répartition équilibrée : 10 <code>normal</code>, 10
+<code>suspected_opacity</code>, 10 <code>uncertain</code>. Splits
+<code>smoke</code> (20) et <code>final</code> (10).</p>
+<p>Ces images <strong>imitent grossièrement</strong> une radiographie
+uniquement pour valider les flux logiciels (chargement, inférence, JSON,
+logs, métriques, garde-fous). Un score parfait sur ce jeu <strong>ne
+constitue pas</strong> une performance médicale. Pour un vrai projet :
+RSNA Pneumonia, CheXpert, MIMIC-CXR ou NIH ChestX-ray, sous réserve de
+licence et de conditions d’accès (voir §9).</p>
+<p>Le signal exploité est réel et interprétable : les trois classes se
+distinguent par le <strong>contraste global</strong> (écart-type des
+intensités) et la <strong>taille d’une zone focale brillante</strong>
+(proxy d’opacité) :</p>
+<table>
+<thead>
+<tr>
+<th>Classe</th>
+<th>Contraste (std)</th>
+<th>Pic lumineux (p99)</th>
+<th>Zone brillante</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>normal</code></td>
+<td>~16.9</td>
+<td>~64</td>
+<td>~0.37 %</td>
+</tr>
+<tr>
+<td><code>suspected_opacity</code></td>
+<td>~19.1</td>
+<td>~86</td>
+<td>1.2–2.5 %</td>
+</tr>
+<tr>
+<td><code>uncertain</code> (qualité limitée)</td>
+<td>~10.5</td>
+<td>~44</td>
+<td>~0.07 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Jeu réel de validation</strong> : en complément, 30 vraies
+radiographies publiques du dataset Kaggle <em>Chest X-Ray Images
+(Pneumonia)</em> (15 <code>normal</code> + 15
+<code>suspected_opacity</code>) servent à valider le vrai modèle médical
+(voir §6.3). Source et licence citées au §10 ; les images ne sont
+<strong>pas</strong> redistribuées (dossier <code>data/real/</code>
+gitignoré).</p>
+<h2 id="stratégie-baseline">4. Stratégie baseline</h2>
+<p><code>toy_predict(mode=&quot;baseline&quot;)</code>
+(<code>src/inference.py</code>) est un <strong>classifieur d’image
+transparent</strong> (pas un modèle appris) : il lit des statistiques de
+l’image (via <code>src/preprocessing.py:extract_features</code>) et
+applique une règle unique — si la fraction de pixels très brillants
+dépasse <code>OPACITY_BRIGHT_FRACTION</code> (0.8 %), la classe est
+<code>suspected_opacity</code>, sinon <code>normal</code>.</p>
+<p><strong>Limite volontaire de la baseline</strong> : elle n’a
+<strong>aucune notion de qualité d’image</strong> et <strong>n’abstient
+jamais</strong>. C’est exactement le comportement risqué que
+l’amélioration corrige.</p>
+<blockquote>
+<p>Choix de conception : la baseline ne « triche » pas en lisant le
+label dans le nom de fichier. Elle décide à partir des pixels, ce qui
+rend l’évaluation et l’analyse d’erreurs honnêtes.</p>
+</blockquote>
+<p>Un <strong>connecteur VLM réel</strong> (MedGemma via
+<code>transformers</code>) est disponible en option
+(<code>medgemma_predict</code>), non requis pour la démo : il nécessite
+<code>HF_TOKEN</code>, un accès réseau et un téléchargement de plusieurs
+Go. Il réutilise les prompts versionnés
+<code>prompts/baseline_prompt.txt</code> et
+<code>prompts/improved_prompt.txt</code>.</p>
+<h2 id="amélioration-règle-dincertitude-explicite">5. Amélioration
+(règle d’incertitude explicite)</h2>
+<p><code>toy_predict(mode=&quot;improved&quot;)</code> ajoute deux garde-fous
+:</p>
+<ol type="1">
+<li><strong>Qualité image</strong> : si le contraste est faible
+(<code>limited</code>/<code>poor</code>), on bascule vers
+<code>uncertain</code> (on ne conclut pas sur une image peu
+lisible).</li>
+<li><strong>Seuil de confiance</strong> : si la confiance &lt;
+<strong>0.60</strong>, on bascule vers <code>uncertain</code> (règle
+explicitement écrite dans
+<code>prompts/improved_prompt.txt</code>).</li>
+</ol>
+<p>Les garde-fous transverses (<code>src/guardrails.py</code>)
+s’appliquent aux deux modes : validation du schéma JSON,
+<code>warning</code> toujours présent, repli vers <code>uncertain</code>
+si sortie invalide.</p>
+<h2 id="métriques-résultats-reproductibles">6. Métriques (résultats
+reproductibles)</h2>
+<p><strong>Récapitulatif — les 8 métriques exigées sont toutes
+calculées</strong> (7 dans l’éval jouet via <code>src/metrics.py</code>,
+la 8ᵉ — hallucination — dans la comparaison VLM via
+<code>detect_overclaim</code>, car un classifieur à règles ne peut pas
+halluciner) :</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrique exigée</th>
+<th style="text-align: center;">Calculée</th>
+<th>Exemple de valeur (améliorée jouet / MedGemma réel)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td style="text-align: center;">✅</td>
+<td>1.000 / 0.767</td>
+</tr>
+<tr>
+<td>Macro-F1</td>
+<td style="text-align: center;">✅</td>
+<td>1.000 / 0.566</td>
+</tr>
+<tr>
+<td>Sensibilité</td>
+<td style="text-align: center;">✅</td>
+<td>1.000 / 0.667</td>
+</tr>
+<tr>
+<td>Spécificité</td>
+<td style="text-align: center;">✅</td>
+<td>1.000 / 0.867</td>
+</tr>
+<tr>
+<td>Validité JSON</td>
+<td style="text-align: center;">✅</td>
+<td>1.000 / 1.000</td>
+</tr>
+<tr>
+<td>Latence médiane</td>
+<td style="text-align: center;">✅</td>
+<td>~3 ms / ~27 s</td>
+</tr>
+<tr>
+<td>Taux d’incertitude</td>
+<td style="text-align: center;">✅</td>
+<td>0.333 / 0.133</td>
+</tr>
+<tr>
+<td>Hallucination / justif. non fondée</td>
+<td style="text-align: center;">✅</td>
+<td>(jouet : n/a) / 0.933→0.800</td>
+</tr>
+</tbody>
+</table>
+<h3 id="détail-sur-le-jeu-jouet">6.0 Détail sur le jeu jouet</h3>
+<p>Évaluation sur les 30 cas
+(<code>python eval/run_evaluation.py --mode toy</code>) :</p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">Baseline</th>
+<th style="text-align: right;">Amélioration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td style="text-align: right;"><strong>0.667</strong></td>
+<td style="text-align: right;"><strong>1.000</strong></td>
+</tr>
+<tr>
+<td>Macro-F1</td>
+<td style="text-align: right;">0.556</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Sensibilité (<code>suspected_opacity</code>)</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Spécificité (<code>normal</code>)</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Taux d’incertitude</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td>JSON valide</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Warning présent</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Latence médiane</td>
+<td style="text-align: right;">~3 ms</td>
+<td style="text-align: right;">~3 ms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lecture</strong> : le gain ne se limite pas à un chiffre. La
+baseline classe parfaitement <code>normal</code> et
+<code>suspected_opacity</code> mais <strong>force les 10 images de
+qualité limitée en <code>normal</code></strong> avec une confiance
+élevée (~0.84) — un comportement faussement rassurant. La règle
+d’incertitude fait passer ces 10 cas en <code>uncertain</code>
+(confiance plafonnée à 0.5), portant l’accuracy de 0.667 à 1.0 et le
+macro-F1 de 0.556 à 1.0. L’amélioration corrige donc un <strong>mode
+d’échec précis et médicalement pertinent</strong>, pas seulement un
+score.</p>
+<h3 id="sensibilité-au-seuil-analyse-dablation">6.1 Sensibilité au seuil
+(analyse d’ablation)</h3>
+<p><code>eval/threshold_sweep.py</code> fait varier le seuil de
+contraste qui déclenche l’abstention (mode amélioré). La courbe montre
+trois régimes :</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Seuil <code>limited_contrast_std</code></th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Taux d’incertitude</th>
+<th>Régime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 10.5</td>
+<td style="text-align: right;">0.667</td>
+<td style="text-align: right;">0.00</td>
+<td>aucune abstention (= baseline)</td>
+</tr>
+<tr>
+<td><strong>11 – 16</strong></td>
+<td style="text-align: right;"><strong>1.000</strong></td>
+<td style="text-align: right;"><strong>0.333</strong></td>
+<td><strong>zone sûre (valeur retenue : 13)</strong></td>
+</tr>
+<tr>
+<td>≥ 18</td>
+<td style="text-align: right;">0.667 → 0.333</td>
+<td style="text-align: right;">0.67 → 1.0</td>
+<td>sur-abstention (utilité détruite)</td>
+</tr>
+</tbody>
+</table>
+<p>Le seuil retenu (13) est volontairement au centre de la plage sûre
+[10.6 ; 16.9]. Cela prouve que le garde-fou a un <strong>coût</strong>
+et que sa valeur est justifiée, pas arbitraire.</p>
+<h3 id="comparaison-de-prompts-sur-un-vrai-vlm-métrique-dhallucination">6.2
+Comparaison de prompts sur un vrai VLM + métrique d’hallucination</h3>
+<p><code>eval/run_vlm_comparison.py</code> exécute un
+<strong>vrai</strong> modèle vision-langage avec le
+<code>baseline_prompt</code> puis l’<code>improved_prompt</code>,
+applique les mêmes garde-fous et mesure en plus un <strong>taux de
+sur-affirmation</strong> (<code>detect_overclaim</code> : présence de
+pathologies nommées / langage définitif = proxy d’hallucination) et un
+taux de JSON invalide.</p>
+<p>Résultats obtenus sur le <strong>vrai modèle médical
+<code>google/medgemma-4b-it</code></strong> (4B, image-texte,
+instruction-tuned), 30 cas, GPU :</p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">baseline_prompt</th>
+<th style="text-align: right;">improved_prompt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td style="text-align: right;">0.633</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr>
+<td>Macro-F1</td>
+<td style="text-align: right;">0.531</td>
+<td style="text-align: right;">0.556</td>
+</tr>
+<tr>
+<td>Spécificité (<code>normal</code>)</td>
+<td style="text-align: right;">0.900</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Sensibilité (<code>suspected_opacity</code>)</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr>
+<td><strong>Taux de sur-affirmation (hallucination)</strong></td>
+<td style="text-align: right;"><strong>0.300</strong></td>
+<td style="text-align: right;"><strong>0.000</strong></td>
+</tr>
+<tr>
+<td>JSON valide</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Warning présent</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr>
+<td>Taux d’incertitude</td>
+<td style="text-align: right;">0.700</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr>
+<td>Latence médiane</td>
+<td style="text-align: right;">~17 s</td>
+<td style="text-align: right;">~16 s</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Résultat marquant — le prompt amélioré supprime les
+hallucinations.</strong> Avec le prompt baseline, MedGemma nomme des
+pathologies non fondées dans ses justifications
+(<code>consolidation</code> ×8, <code>mass</code> ×4,
+<code>pneumonia</code> ×3, <code>nodule</code>, <code>diagnosis</code>)
+→ 9 cas sur 30 (taux 0.30). Le prompt renforcé (règles strictes
+d’incertitude et d’évidence) ramène ce taux à <strong>0.00</strong>,
+tout en améliorant légèrement accuracy, macro-F1 et spécificité. C’est
+une <strong>amélioration de sécurité mesurée sur un vrai modèle
+médical</strong>, obtenue uniquement par <em>prompt
+engineering</em>.</p>
+<p><strong>Limite honnête et importante</strong> : la sensibilité est de
+<strong>0/10</strong> sur les opacités dans les deux modes. MedGemma,
+entraîné sur de <strong>vraies</strong> radiographies, ne reconnaît pas
+les fausses opacités synthétiques : il les lit comme <code>normal</code>
+ou s’abstient (<code>uncertain</code>). Cela <strong>confirme
+empiriquement</strong> l’avertissement du sujet — un bon score sur le
+jeu synthétique ne préjuge en rien d’une performance médicale — et
+montre que le jeu jouet ne convient pas pour juger un vrai modèle.</p>
+<blockquote>
+<p>Le harnais avait d’abord été validé de bout en bout sur un modèle
+<strong>ouvert</strong> (SmolVLM-256M), sans accès <em>gated</em>, pour
+prouver la mécanique (garde-fous, validité JSON, détection
+d’hallucination) indépendamment de MedGemma.</p>
+</blockquote>
+<h3 id="validation-sur-données-réelles-le-résultat-le-plus-instructif">6.3
+Validation sur données réelles (le résultat le plus instructif)</h3>
+<p>MedGemma a été relancé sur <strong>30 vraies radiographies</strong>
+publiques (Kaggle <em>chest-xray-pneumonia</em>, 15 <code>normal</code>
++ 15 <code>suspected_opacity</code>), via
+<code>--cases data/real/real_cases.csv</code>. Résultats
+(<code>eval/results/real_vlm/</code>) :</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">baseline_prompt</th>
+<th style="text-align: right;">improved_prompt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td style="text-align: right;"><strong>0.767</strong></td>
+<td style="text-align: right;">0.533</td>
+</tr>
+<tr>
+<td>Macro-F1</td>
+<td style="text-align: right;">0.566</td>
+<td style="text-align: right;">0.292</td>
+</tr>
+<tr>
+<td><strong>Sensibilité (<code>suspected_opacity</code>)</strong></td>
+<td style="text-align: right;"><strong>0.667</strong> (10/15)</td>
+<td style="text-align: right;"><strong>0.067</strong> (1/15)</td>
+</tr>
+<tr>
+<td>Spécificité (<code>normal</code>)</td>
+<td style="text-align: right;">0.867 (13/15)</td>
+<td style="text-align: right;">1.000 (15/15)</td>
+</tr>
+<tr>
+<td>Taux d’incertitude</td>
+<td style="text-align: right;">0.200</td>
+<td style="text-align: right;">0.133</td>
+</tr>
+<tr>
+<td>Taux de sur-affirmation</td>
+<td style="text-align: right;">0.933</td>
+<td style="text-align: right;">0.800</td>
+</tr>
+</tbody>
+</table>
+<p>Deux enseignements majeurs, honnêtes :</p>
+<p><strong>1. Le modèle médical fonctionne réellement sur de vraies
+radios.</strong> Contrairement au jeu synthétique (sensibilité 0/10),
+MedGemma détecte ici <strong>10 pneumonies sur 15</strong> avec le
+prompt baseline (sensibilité 0.667, accuracy 0.767). C’est la preuve que
+l’approche a un vrai signal médical — impossible à démontrer sur le
+synthétique.</p>
+<p><strong>2. Notre « amélioration » a sur-appris le jeu jouet et échoue
+sur le réel.</strong> La règle stricte d’incertitude, qui améliorait le
+score sur le synthétique, <strong>fait chuter la sensibilité de 0.667 à
+0.067</strong> sur données réelles : le prompt renforcé pousse MedGemma
+à sur-classer en <code>normal</code> (25/30) et à <strong>manquer 14
+pneumonies sur 15</strong>. En contexte médical, ce sont des
+<strong>faux négatifs dangereux</strong>. Le prompt baseline est donc,
+sur le réel, <strong>plus sûr</strong> que notre « amélioration ».</p>
+<blockquote>
+<p><strong>Leçon d’ingénierie</strong> : une amélioration validée sur un
+jeu jouet doit être <strong>re-validée sur des données réelles</strong>
+avant d’être adoptée. Un gain mesuré sur le synthétique ne transfère pas
+nécessairement — il peut même nuire.</p>
+</blockquote>
+<p><strong>Nuance sur le taux de sur-affirmation</strong> : il est très
+élevé sur le réel (0.80-0.93) car, sur de vraies images pathologiques,
+nommer « consolidation » ou « opacité » est souvent
+<strong>légitime</strong>, pas une hallucination. Notre détecteur, conçu
+pour le cadre synthétique (où toute pathologie nommée = invention),
+<strong>sur-compte</strong> donc sur données réelles : la métrique doit
+être interprétée selon le contexte.</p>
+<h2 id="analyse-derreurs">7. Analyse d’erreurs</h2>
+<p><code>eval/error_register.csv</code> (généré par
+<code>eval/build_error_register.py</code>) contient les <strong>30 cas
+commentés</strong> avec la taxonomie du projet :</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Signification</th>
+<th style="text-align: right;">Occurrences (baseline)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OK</td>
+<td>Classification correcte</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr>
+<td>FN</td>
+<td>Faux négatif / rassurance abusive</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr>
+<td>FP</td>
+<td>Faux positif</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>UA</td>
+<td>Incertitude acceptable</td>
+<td style="text-align: right;">0 (baseline n’abstient jamais)</td>
+</tr>
+<tr>
+<td>JF</td>
+<td>Erreur de format JSON</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>HT</td>
+<td>Hallucination textuelle</td>
+<td style="text-align: right;">évaluée manuellement, non détectée</td>
+</tr>
+</tbody>
+</table>
+<p>Les 10 FN correspondent aux images <code>uncertain</code> (qualité
+limitée) que la baseline appelle <code>normal</code>. Chaque ligne du
+registre indique la prédiction baseline, la prédiction améliorée, la
+sévérité et l’action corrective. En mode amélioré, ces 10 cas deviennent
+<code>uncertain</code> → 0 erreur résiduelle sur ce jeu.</p>
+<p>Une <strong>analyse commentée à la main</strong> des cas les plus
+instructifs (succès, échecs, sur-abstention) est disponible dans <a href="error_analysis.md"><code>docs/error_analysis.md</code></a>.</p>
+<h2 id="limites">8. Limites</h2>
+<ul>
+<li>Données <strong>synthétiques</strong> non représentatives d’une
+population clinique. Pour le classifieur jouet, les classes sont
+nettement séparables → un score parfait en mode amélioré est
+<strong>attendu</strong> et ne préjuge pas d’une performance médicale.
+Le vrai modèle MedGemma, lui, ne « voit » pas les fausses opacités
+synthétiques (sensibilité 0/10) : le jeu jouet ne suffit pas à évaluer
+un modèle réel.</li>
+<li>La <strong>confiance est un proxy heuristique, non
+calibré</strong>.</li>
+<li>Sensibilité aux seuils (<code>OPACITY_BRIGHT_FRACTION</code>, seuil
+de confiance 0.60) et, pour le connecteur réel, au modèle et au
+prompt.</li>
+<li><strong>Hallucination textuelle observée</strong> avec MedGemma sous
+prompt baseline (30 % de justifications citant des pathologies non
+fondées sur le jeu synthétique), <strong>ramenée à 0 %</strong> par le
+prompt renforcé — mais le risque demeure intrinsèque à tout VLM
+réel.</li>
+<li><strong>L’amélioration ne transfère pas au réel</strong> : la règle
+d’incertitude, bénéfique sur le synthétique, fait chuter la sensibilité
+de MedGemma de 0.67 à 0.07 sur de vraies radios (pneumonies manquées).
+Elle a <strong>sur-appris le jeu jouet</strong> et doit être re-calibrée
+sur données réelles avant tout usage — un garde-fou trop strict devient
+dangereux (faux négatifs).</li>
+</ul>
+<h2 id="risques-et-précautions-éthiques">9. Risques et précautions
+éthiques</h2>
+<ul>
+<li><strong>Ligne rouge</strong> : aucun usage clinique, aucun tri,
+aucune orientation patient.</li>
+<li><strong>Avertissement obligatoire</strong> présent dans la sortie
+JSON, l’interface web, le README et ce rapport.</li>
+<li><strong>Données</strong> : uniquement synthétiques ou publiques
+autorisées et dé-identifiées. Aucune donnée patient réelle, même
+pseudonymisée, sans autorisation traçable.</li>
+<li><strong>Journalisation</strong> : chaque prédiction (image, modèle,
+prompt, classe, confiance, latence) est tracée en SQLite
+(<code>runs</code>) pour auditabilité.</li>
+<li>Détails complets dans <a href="ethique_et_limites.md"><code>docs/ethique_et_limites.md</code></a>.</li>
+</ul>
+<h2 id="dépendances-et-licences">10. Dépendances et licences</h2>
+<ul>
+<li>Code du dépôt : licence <strong>MIT</strong> (voir
+<code>LICENSE</code>).</li>
+<li>Dépendances Python : voir <code>requirements.txt</code> /
+<code>requirements-test.txt</code>. Le mode jouet n’utilise que
+<code>numpy</code>, <code>pillow</code>, <code>pandas</code> (+
+<code>fastapi</code>/<code>streamlit</code> pour les interfaces). Le
+connecteur réel ajoute <code>transformers</code>, <code>torch</code>,
+<code>accelerate</code>.</li>
+<li><strong>Modèle réellement utilisé</strong> :
+<code>google/medgemma-4b-it</code> (Google, 4B, image-texte,
+instruction-tuned). Accès <em>gated</em> sur Hugging Face sous
+<strong>Health AI Developer Foundations Terms of Use</strong> —
+acceptation de licence requise + <code>HF_TOKEN</code>. Réf. : <a href="https://huggingface.co/google/medgemma-4b-it" class="uri">https://huggingface.co/google/medgemma-4b-it</a>.</li>
+<li><strong>Dataset réel réellement utilisé</strong> (validation §6.3) :
+<em>Chest X-Ray Images (Pneumonia)</em>, Paul T. Mooney,
+<strong>Kaggle</strong> — dérivé de Kermany D. et al., <em>Identifying
+Medical Diagnoses and Treatable Diseases by Image-Based Deep
+Learning</em>, <strong>Cell 2018</strong>. Licence <strong>CC BY
+4.0</strong>, usage recherche, <strong>non redistribué</strong> dans ce
+dépôt (images gitignorées, <code>data/real/</code>). Réf. : <a href="https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia" class="uri">https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia</a>.</li>
+<li>Modèle ouvert de validation du harnais :
+<code>HuggingFaceTB/SmolVLM-256M-Instruct</code> (Apache-2.0), non
+médical.</li>
+<li>Autres ressources citées mais <strong>non utilisées</strong>
+(pistes) : Gemma 4 / Unsloth, MIMIC-CXR (PhysioNet, accès crédentialé),
+CheXpert (Stanford AIMI). Voir le tableau du <a href="../README.md">README</a> et <code>docs/appel_offre.md</code>.</li>
+<li>Dépendances Python : <code>requirements.txt</code> (mode jouet :
+<code>numpy</code>, <code>pillow</code>, <code>pandas</code>, +
+<code>fastapi</code>/<code>streamlit</code> ; connecteur réel :
+<code>transformers</code>, <code>torch</code>, <code>accelerate</code>).
+Variable d’environnement : <code>HF_TOKEN</code> (jamais commitée ;
+<code>.env.example</code>).</li>
+</ul>
+<h2 id="preuves-commandes-reproductibles">11. Preuves (commandes
+reproductibles)</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Tests de fumée (structure, schéma, garde-fous, API, éval, robustesse)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">PYTEST_DISABLE_PLUGIN_AUTOLOAD</span><span class="op">=</span>1 <span class="ex">python</span> <span class="at">-m</span> pytest <span class="at">-q</span>            <span class="co"># 14 tests</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Évaluation baseline vs amélioration (écrit eval/results/ + logs SQLite)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> eval/run_evaluation.py <span class="at">--mode</span> toy</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Registre d&#39;erreurs commenté (30 cas)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> eval/build_error_register.py</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Analyse de sensibilité au seuil</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> eval/threshold_sweep.py</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Comparaison de prompts sur le vrai modèle médical MedGemma (accès gated + HF_TOKEN)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="va">HF_TOKEN</span><span class="op">=</span>... <span class="ex">python</span> eval/run_vlm_comparison.py <span class="at">--model</span> google/medgemma-4b-it</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   Variante sans accès gated (validation du harnais sur modèle ouvert) :</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#   python eval/run_vlm_comparison.py --model HuggingFaceTB/SmolVLM-256M-Instruct --limit 9</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. (Optionnel) Évaluer sur un échantillon réel autorisé — voir data/real/README.md</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/prepare_real_dataset.py <span class="at">--images</span> data/real/images <span class="at">--labels</span> data/real/labels.csv</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> eval/run_evaluation.py <span class="at">--mode</span> toy <span class="at">--cases</span> data/real/real_cases.csv</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Démo web (une interface au choix)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ex">streamlit</span> run app/streamlit_app.py</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ex">uvicorn</span> api.main:app <span class="at">--reload</span>   <span class="co"># puis POST /predict, GET /history</span></span></code></pre></div>
+<p>Sorties de preuve :
+<code>eval/results/before_after_summary.csv</code>,
+<code>eval/results/{baseline,improved}_metrics.json</code>,
+<code>eval/results/*_confusion.csv</code>,
+<code>eval/results/threshold_sweep.csv</code>,
+<code>eval/results/vlm_before_after_summary.csv</code>,
+<code>eval/error_register.csv</code>, table <code>runs</code> de
+<code>medical_ai_evidence.sqlite</code>.</p>
+</body>
+</html>
