@@ -59,6 +59,7 @@ def test_repository_student_contract_is_present() -> None:
         "eval/threshold_sweep.py",
         "eval/error_register.csv",
         "scripts/prepare_real_dataset.py",
+        "finetuning/train_cxr_classifier.py",
         "docs/rapport.md",
         "docs/error_analysis.md",
         "prompts/json_schema.md",

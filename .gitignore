@@ -50,6 +50,9 @@ data/real/*
 models/
 *.safetensors
 *.gguf
+*.pt
+*.pth
+*.ckpt
 
 # ── Matériel local / professeur ──────────────────────────────────────────
 assets/
