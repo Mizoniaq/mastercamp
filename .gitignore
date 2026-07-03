@@ -1,23 +1,58 @@
-.venv/
+# ── Python ───────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
-.pytest_cache/
-.ipynb_checkpoints/
-tmp_uploads/
-medical_ai_evidence.sqlite
-eval/outputs/
-.env
-.DS_Store
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
 
-# Real medical data must never be committed (only the guide is tracked)
+# ── Environnements virtuels ──────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Outils / caches ──────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# ── IDE / OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Secrets & variables d'environnement ──────────────────────────────────
+# Ne JAMAIS commiter de token (HF_TOKEN, etc.). On garde seulement l'exemple.
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# ── Artefacts générés à l'exécution ──────────────────────────────────────
+tmp_uploads/
+*.sqlite
+*.sqlite3
+*.log
+eval/outputs/
+
+# ── Données réelles : jamais commitées (seul le guide est suivi) ─────────
+# Images patient / dataset Kaggle volumineux, catalogue local.
 data/real/*
 !data/real/README.md
 
-# Local/professor visual material
-assets/
+# ── Poids de modèles (jamais dans le dépôt) ──────────────────────────────
+models/
+*.safetensors
+*.gguf
 
-# Local review / rollback material
+# ── Matériel local / professeur ──────────────────────────────────────────
+assets/
 .rollback*/
 
-# Local duplicate; the shareable PDF lives in docs/appel_offre.pdf
+# Doublon local ; le PDF partageable vit dans docs/appel_offre.pdf
 /appel_offre.pdf
