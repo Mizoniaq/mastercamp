@@ -54,6 +54,13 @@ def test_repository_student_contract_is_present() -> None:
         "src/guardrails.py",
         "api/main.py",
         "eval/run_evaluation.py",
+        "eval/run_vlm_comparison.py",
+        "eval/build_error_register.py",
+        "eval/threshold_sweep.py",
+        "eval/error_register.csv",
+        "scripts/prepare_real_dataset.py",
+        "docs/rapport.md",
+        "docs/error_analysis.md",
         "prompts/json_schema.md",
     ]
     forbidden_paths = [
@@ -229,6 +236,14 @@ def test_robust_predict_handles_corrupt_input(tmp_path) -> None:
     assert pred["predicted_class"] == "uncertain"
     assert pred["warning"] == WARNING_TEXT
     assert any("unreadable" in item for item in pred["limitations"])
+
+
+def test_guardrails_survive_non_numeric_confidence() -> None:
+    # A real VLM can emit a non-numeric confidence; guardrails must not crash.
+    pred = apply_safety_guardrails({"predicted_class": "normal", "confidence": "high"})
+    assert pred["predicted_class"] == "uncertain"
+    assert isinstance(pred["confidence"], float)
+    assert pred["warning"] == WARNING_TEXT
 
 
 def test_overclaim_detector_flags_clinical_language() -> None:

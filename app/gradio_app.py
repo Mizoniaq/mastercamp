@@ -8,14 +8,17 @@ import gradio as gr
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.inference import toy_predict
+from src.inference import robust_predict
 from src.guardrails import apply_safety_guardrails
+from src.database import log_prediction
 
 
 def analyze(image_path, mode):
     if image_path is None:
         return {"error": "no image"}
-    return apply_safety_guardrails(toy_predict(image_path, mode=mode))
+    pred = apply_safety_guardrails(robust_predict(image_path, mode=mode))
+    log_prediction(case_id=Path(str(image_path)).stem, image_path=str(image_path), prediction=pred)
+    return pred
 
 
 demo = gr.Interface(

@@ -48,13 +48,21 @@ def validate_prediction(pred: dict[str, Any]) -> tuple[bool, list[str]]:
     return not errors, errors
 
 
+def _coerce_confidence(value: Any) -> float:
+    """Best-effort numeric confidence; non-numeric model output becomes 0.0."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def apply_safety_guardrails(pred: dict[str, Any]) -> dict[str, Any]:
     valid, errors = validate_prediction(pred)
     if not valid:
         pred["predicted_class"] = "uncertain"
-        pred["confidence"] = min(float(pred.get("confidence", 0.0) or 0.0), 0.5)
+        pred["confidence"] = min(max(_coerce_confidence(pred.get("confidence")), 0.0), 0.5)
         pred.setdefault("limitations", []).append("guardrail triggered: invalid output schema")
-    if pred.get("image_quality") in {"limited", "poor"} and float(pred.get("confidence", 0)) < 0.6:
+    if pred.get("image_quality") in {"limited", "poor"} and _coerce_confidence(pred.get("confidence")) < 0.6:
         pred["predicted_class"] = "uncertain"
     pred["warning"] = WARNING_TEXT
     pred["guardrail_errors"] = errors

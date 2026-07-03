@@ -16,11 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.guardrails import WARNING_TEXT, apply_safety_guardrails
-from src.inference import robust_predict
+from src.inference import robust_predict, vlm_predict
 from src.database import fetch_recent_runs, log_prediction
 
 SAMPLE_DIR = ROOT / "data" / "sample_images"
+REAL_CASES_CSV = ROOT / "data" / "real" / "real_cases.csv"
 RESULTS_DIR = ROOT / "eval" / "results"
+MEDGEMMA_MODEL = "google/medgemma-4b-it"
 FEATURED_SAMPLES = [
     ("Normal", "CXR_SYN_001_normal.png"),
     ("Opacité", "CXR_SYN_002_suspected_opacity.png"),
@@ -673,7 +675,15 @@ def render_prediction_card(pred: dict) -> None:
     )
 
 
-def render_toolbar() -> str:
+def list_real_images() -> list[Path]:
+    """Real chest X-rays taken from the curated data/real/real_cases.csv (if present)."""
+    if not REAL_CASES_CSV.exists():
+        return []
+    df = pd.read_csv(REAL_CASES_CSV)
+    return [Path(p) for p in df["image_path"].tolist() if Path(p).exists()][:60]
+
+
+def render_toolbar() -> tuple[str, str]:
     with st.container(border=True):
         st.markdown('<div class="ra-toolbar__label">Paramètres d\'analyse</div>', unsafe_allow_html=True)
 
@@ -686,6 +696,14 @@ def render_toolbar() -> str:
                 options=["baseline", "improved"],
                 horizontal=True,
                 format_func=lambda value: "Baseline" if value == "baseline" else "Amélioré",
+                label_visibility="collapsed",
+            )
+            st.caption("Moteur")
+            engine = st.radio(
+                "Moteur",
+                options=["toy", "medgemma"],
+                horizontal=True,
+                format_func=lambda v: "Jouet (rapide)" if v == "toy" else "MedGemma (réel · ~30s)",
                 label_visibility="collapsed",
             )
 
@@ -719,13 +737,23 @@ def render_toolbar() -> str:
                     st.session_state.selected_sample = str(SAMPLE_DIR / picked_name)
                     st.rerun()
 
+    real_images = list_real_images()
+    if real_images:
+        with st.expander(f"Radios réelles (Kaggle · {len(real_images)} cas)"):
+            st.caption("Vraies radiographies — à analyser de préférence avec le moteur MedGemma.")
+            labels = [f"{p.parent.name} · {p.name}" for p in real_images]
+            picked = st.selectbox("Cas réel", labels, label_visibility="collapsed")
+            if st.button("Charger la radio réelle", use_container_width=True):
+                st.session_state.selected_sample = str(real_images[labels.index(picked)])
+                st.rerun()
+
     if st.session_state.selected_sample:
         name = Path(st.session_state.selected_sample).name
         if st.button(f"Retirer · {name}"):
             st.session_state.selected_sample = None
             st.rerun()
 
-    return mode
+    return mode, engine
 
 
 def render_dashboard_tab() -> None:
@@ -746,6 +774,18 @@ def render_dashboard_tab() -> None:
             "Aucun résultat d'évaluation trouvé. Générez-les avec :\n\n"
             "`python eval/run_evaluation.py --mode toy`"
         )
+
+    # Résultats du vrai modèle MedGemma (prompt baseline vs amélioré)
+    for title, path in [
+        ("MedGemma — jeu synthétique", RESULTS_DIR / "vlm_before_after_summary.csv"),
+        ("MedGemma — vraies radios (Kaggle)", RESULTS_DIR / "real_vlm" / "vlm_before_after_summary.csv"),
+    ]:
+        if path.exists():
+            st.subheader(title)
+            df = pd.read_csv(path)
+            keep = [c for c in ("mode", "accuracy", "macro_f1", "sensitivity", "specificity",
+                                "uncertain_rate", "overclaim_rate", "json_valid_rate") if c in df.columns]
+            st.dataframe(df[keep], use_container_width=True, hide_index=True)
 
     # Matrices de confusion baseline vs amélioration
     conf_baseline = RESULTS_DIR / "baseline_confusion.csv"
@@ -812,7 +852,7 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-        mode = render_toolbar()
+        mode, engine = render_toolbar()
 
         st.markdown(
             """
@@ -856,7 +896,20 @@ def main() -> None:
 
             with result_col:
                 st.markdown("#### Résultat")
-                pred = apply_safety_guardrails(robust_predict(image_path, mode=mode))
+                if engine == "medgemma":
+                    with st.spinner("MedGemma analyse la radiographie… (~30 s ; chargement du modèle au 1er appel)"):
+                        try:
+                            pred = apply_safety_guardrails(
+                                vlm_predict(image_path, mode=mode, model_id=MEDGEMMA_MODEL)
+                            )
+                        except Exception as exc:
+                            st.error(
+                                f"MedGemma indisponible ({exc}). Vérifiez HF_TOKEN et l'accès au modèle. "
+                                "Repli sur le moteur jouet."
+                            )
+                            pred = apply_safety_guardrails(robust_predict(image_path, mode=mode))
+                else:
+                    pred = apply_safety_guardrails(robust_predict(image_path, mode=mode))
                 render_prediction_card(pred)
 
                 # Trace de la prédiction (contrat de journalisation).
@@ -931,9 +984,10 @@ def main() -> None:
                 }
             )
 
-            # Statistiques descriptives
+            # Statistiques descriptives (cast en str : describe(include='all') mélange
+            # des types par colonne, ce que le moteur d'affichage Arrow refuse).
             with st.expander("Statistiques descriptives"):
-                st.dataframe(filtered_df.describe(include='all'), use_container_width=True)
+                st.dataframe(filtered_df.describe(include='all').astype(str), use_container_width=True)
 
     # ── ONGLET 3 : VISUALISATIONS ──────────────────────────────────────────────
     with tab3:
