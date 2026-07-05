@@ -312,15 +312,21 @@ radiographie est <strong>refusée avant toute analyse</strong>.
 <li><strong>Couleur</strong> (<code>is_probably_cxr</code>) : une radio
 est en niveaux de gris → les photos couleur (chat, selfie) sont rejetées
 instantanément.</li>
-<li><strong>Détecteur OOD</strong>
-(<code>finetuning/build_ood_detector.py</code>) : features ResNet18
-(ImageNet) → PCA → <strong>distance de Mahalanobis</strong> à la
-distribution des vraies radios (seuil calibré sur des radios held-out).
-Rejette les non-radiographies que la couleur manque — <strong>y compris
-un chat en niveaux de gris</strong>. Séparation mesurée : radios ≤ 75,
-seuil 82, images hors périmètre ≥ 86. Repli gracieux : sans torch, seule
-la vérification couleur s’applique. Limite assumée : la marge OOD reste
-modérée sur ce petit jeu.</li>
+<li><strong>Détecteur discriminant</strong>
+(<code>finetuning/build_ood_detector.py</code>) : une <strong>régression
+logistique</strong> sur les features <strong>ResNet18
+(ImageNet)</strong>, entraînée à séparer les radios thoraciques d’un jeu
+de <strong>négatifs variés</strong> — vraies photos de chats/chiens,
+images naturelles (CIFAR), vêtements (FashionMNIST), chiffres (MNIST),
+bruit/gradients. Elle rejette <strong>tout ce qui n’est pas une radio
+thoracique</strong>, y compris un <strong>chat en niveaux de
+gris</strong>. <strong>Validation sur held-out</strong> : radios réelles
+<strong>acceptées à 100 %</strong> ; <strong>0 %</strong> accepté à tort
+sur photos chats/chiens, CIFAR, FashionMNIST, MNIST, photographies
+(raton/escalier) et bruit. Le garde s’applique à l’app
+<strong>et</strong> à l’API <code>/predict</code>. Artefact committé (~7
+Ko) → marche sur tout clone sans le dataset. Repli gracieux : sans
+torch, seule la vérification couleur s’applique.</li>
 </ol></li>
 <li><strong>Sorties</strong> : <code>normal</code>,
 <code>suspected_opacity</code>, <code>uncertain</code>.</li>

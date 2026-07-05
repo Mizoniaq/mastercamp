@@ -26,13 +26,18 @@ garde-fous, métriques, journalisation et analyse d'erreurs.
   une radiographie est **refusée avant toute analyse**.
   1. **Couleur** (`is_probably_cxr`) : une radio est en niveaux de gris → les
      photos couleur (chat, selfie) sont rejetées instantanément.
-  2. **Détecteur OOD** (`finetuning/build_ood_detector.py`) : features ResNet18
-     (ImageNet) → PCA → **distance de Mahalanobis** à la distribution des vraies
-     radios (seuil calibré sur des radios held-out). Rejette les non-radiographies
-     que la couleur manque — **y compris un chat en niveaux de gris**. Séparation
-     mesurée : radios ≤ 75, seuil 82, images hors périmètre ≥ 86.
-  Repli gracieux : sans torch, seule la vérification couleur s'applique. Limite
-  assumée : la marge OOD reste modérée sur ce petit jeu.
+  2. **Détecteur discriminant** (`finetuning/build_ood_detector.py`) : une
+     **régression logistique** sur les features **ResNet18 (ImageNet)**, entraînée
+     à séparer les radios thoraciques d'un jeu de **négatifs variés** — vraies
+     photos de chats/chiens, images naturelles (CIFAR), vêtements (FashionMNIST),
+     chiffres (MNIST), bruit/gradients. Elle rejette **tout ce qui n'est pas une
+     radio thoracique**, y compris un **chat en niveaux de gris**.
+     **Validation sur held-out** : radios réelles **acceptées à 100 %** ;
+     **0 %** accepté à tort sur photos chats/chiens, CIFAR, FashionMNIST, MNIST,
+     photographies (raton/escalier) et bruit. Le garde s'applique à l'app **et** à
+     l'API `/predict`.
+  Artefact committé (~7 Ko) → marche sur tout clone sans le dataset. Repli
+  gracieux : sans torch, seule la vérification couleur s'applique.
 - **Sorties** : `normal`, `suspected_opacity`, `uncertain`.
 - La classe `uncertain` est un **garde-fou méthodologique** : savoir ne pas
   conclure sur une image ambiguë ou de mauvaise qualité fait partie de la qualité

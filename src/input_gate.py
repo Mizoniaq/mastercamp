@@ -2,11 +2,13 @@
 
 Two layers, cheapest first:
   1. **Colour check** (`preprocessing.is_probably_cxr`) — torch-free, instant;
-     rejects colour photos (a cat, a selfie).
-  2. **Out-of-distribution detector** (this module) — a ResNet18(ImageNet) feature
-     + PCA + Mahalanobis model fitted on real & synthetic chest X-rays
-     (`src/artifacts/cxr_ood.npz`, built by `finetuning/build_ood_detector.py`).
-     Catches non-radiographs that the colour check misses, e.g. a *grayscale* cat.
+     rejects colour photos.
+  2. **Discriminative detector** (this module) — a logistic regression on frozen
+     ResNet18(ImageNet) features, trained to separate chest X-rays from a diverse
+     negative set (natural photos incl. cats/dogs, CIFAR, clothing, digits, noise).
+     Artifact: `src/artifacts/cxr_ood.npz` (~7 KB, built by
+     `finetuning/build_ood_detector.py`). Rejects anything that is not a chest
+     X-ray — including a *grayscale* cat.
 
 The deep layer degrades gracefully: if torch/torchvision or the artifact are
 unavailable, the gate falls back to the colour check only.
@@ -14,19 +16,20 @@ unavailable, the gate falls back to the colour check only.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from .preprocessing import is_probably_cxr
 
 ARTIFACT = Path(__file__).resolve().parent / "artifacts" / "cxr_ood.npz"
 
-_OOD: dict | None = None  # cached model + params; {} means "unavailable"
+_MODEL: dict | None = None  # cached extractor + LR params; {} means "unavailable"
 
 
-def _load_ood() -> dict:
-    global _OOD
-    if _OOD is not None:
-        return _OOD
+def _load_model() -> dict:
+    global _MODEL
+    if _MODEL is not None:
+        return _MODEL
     try:
         import numpy as np
         import torch
@@ -34,8 +37,8 @@ def _load_ood() -> dict:
         from torchvision.models import ResNet18_Weights
 
         if not ARTIFACT.exists():
-            _OOD = {}
-            return _OOD
+            _MODEL = {}
+            return _MODEL
 
         a = np.load(ARTIFACT)
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -48,44 +51,45 @@ def _load_ood() -> dict:
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
-        _OOD = {
+        _MODEL = {
             "np": np, "torch": torch, "net": net, "tf": tf, "device": device,
-            "pca_mean": a["pca_mean"], "pca_components": a["pca_components"],
-            "ref_mean": a["ref_mean"], "precision": a["precision"],
+            "feat_mean": a["feat_mean"], "feat_scale": a["feat_scale"],
+            "lr_coef": a["lr_coef"], "lr_intercept": float(a["lr_intercept"]),
             "threshold": float(a["threshold"]),
         }
     except Exception:  # torch/torchvision missing, bad artifact, etc.
-        _OOD = {}
-    return _OOD
+        _MODEL = {}
+    return _MODEL
 
 
-def cxr_ood_score(path) -> tuple[float, float] | None:
-    """Return (mahalanobis_score, threshold) or None if the detector is unavailable."""
-    ood = _load_ood()
-    if not ood:
+def cxr_probability(path) -> tuple[float, float] | None:
+    """Return (P(chest X-ray), threshold) or None if the detector is unavailable."""
+    m = _load_model()
+    if not m:
         return None
     from PIL import Image
 
-    torch, np = ood["torch"], ood["np"]
+    torch, np = m["torch"], m["np"]
     with torch.no_grad():
-        x = ood["tf"](Image.open(path).convert("RGB")).unsqueeze(0).to(ood["device"])
-        feat = ood["net"](x)[0].cpu().numpy()
-    z = (feat - ood["pca_mean"]) @ ood["pca_components"].T
-    v = z - ood["ref_mean"]
-    return float(v @ ood["precision"] @ v), ood["threshold"]
+        x = m["tf"](Image.open(path).convert("RGB")).unsqueeze(0).to(m["device"])
+        feat = m["net"](x)[0].cpu().numpy()
+    z = (feat - m["feat_mean"]) / m["feat_scale"]
+    logit = float(z @ m["lr_coef"] + m["lr_intercept"])
+    prob = 1.0 / (1.0 + math.exp(-logit))
+    return prob, m["threshold"]
 
 
 def gate_input(path) -> tuple[bool, str]:
-    """(accepted, reason). Rejects colour photos and out-of-distribution images."""
+    """(accepted, reason). Rejects colour photos and any non-chest-X-ray image."""
     ok, reason = is_probably_cxr(path)          # colour check (always available)
     if not ok:
         return False, reason
-    scored = cxr_ood_score(path)                 # deep OOD check (optional)
+    scored = cxr_probability(path)               # discriminative check (optional)
     if scored is not None:
-        score, threshold = scored
-        if score > threshold:
+        prob, threshold = scored
+        if prob < threshold:
             return False, (
                 f"l'image ne ressemble pas à une radiographie thoracique "
-                f"(score de distribution {score:.0f} > seuil {threshold:.0f})"
+                f"(probabilité radio {prob:.0%} < seuil {threshold:.0%})"
             )
     return True, ""

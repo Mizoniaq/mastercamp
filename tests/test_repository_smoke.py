@@ -270,19 +270,20 @@ def test_input_gate_rejects_non_cxr(tmp_path) -> None:
     assert not ok_pred.get("input_rejected")
 
 
-def test_deep_ood_rejects_grayscale_non_cxr(tmp_path) -> None:
+def test_deep_detector_rejects_grayscale_non_cxr(tmp_path) -> None:
     import numpy as np
     from PIL import Image
-    from src.input_gate import gate_input, cxr_ood_score
+    from src.input_gate import gate_input, cxr_probability
 
     grad = np.tile(np.linspace(0, 255, 128).astype("uint8"), (128, 1))
     p = tmp_path / "grad.png"
     Image.fromarray(grad).save(p)  # grayscale -> passes the colour check
-    if cxr_ood_score(p) is None:
+    if cxr_probability(p) is None:
         import pytest
-        pytest.skip("deep OOD detector unavailable (no torch/torchvision/artifact)")
+        pytest.skip("deep detector unavailable (no torch/torchvision/artifact)")
+    prob, _ = cxr_probability(p)
     ok, _ = gate_input(p)
-    assert not ok  # a grayscale non-radiograph is caught by the OOD detector
+    assert not ok and prob < 0.5  # a grayscale non-radiograph is rejected
 
 
 def test_overclaim_detector_flags_clinical_language() -> None:
