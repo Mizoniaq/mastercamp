@@ -120,7 +120,7 @@ jouet via `src/metrics.py`, la 8ᵉ — hallucination — dans la comparaison VL
 | Sensibilité | ✅ | 1.000 / 0.667 |
 | Spécificité | ✅ | 1.000 / 0.867 |
 | Validité JSON | ✅ | 1.000 / 1.000 |
-| Latence médiane | ✅ | ~3 ms / ~27 s |
+| Latence médiane | ✅ | ~3 ms / ~32 s |
 | Taux d'incertitude | ✅ | 0.333 / 0.133 |
 | Hallucination / justif. non fondée | ✅ | (jouet : n/a) / 0.933→0.800 |
 
@@ -254,13 +254,13 @@ d'entraînement/validation**, un **ResNet18 pré-entraîné (ImageNet) est fine-
 
 | Modèle (sur données réelles) | Accuracy | Sensibilité | Spécificité | Latence | n(test) |
 |---|---:|---:|---:|---:|---:|
-| MedGemma — prompt baseline | 0.767 | 0.667 | 0.867 | ~17 s | 30 |
-| MedGemma — prompt amélioré | 0.533 | 0.067 | 1.000 | ~16 s | 30 |
+| MedGemma — prompt baseline | 0.767 | 0.667 | 0.867 | ~32 s | 30 |
+| MedGemma — prompt amélioré | 0.533 | 0.067 | 1.000 | ~27 s | 30 |
 | **ResNet18 fine-tuné** | **0.833** | **0.987** | 0.577 | **4 ms** | 624 |
 
 **Lecture honnête** : le classifieur entraîné **rattrape presque toutes les
 pneumonies** (sensibilité 0.987, contre 0.667/0.067 pour MedGemma) et infère
-**~4000× plus vite** (4 ms vs ~16 s). Le **compromis** est assumé : sa spécificité
+**~7000× plus vite** (4 ms vs ~30 s). Le **compromis** est assumé : sa spécificité
 est plus basse (0.577) — il **sur-signale** (beaucoup de `normal` classés
 `suspected_opacity`), soit le **mode d'échec inverse** de MedGemma amélioré (qui,
 lui, sur-normalise). Pour un usage de **dépistage** (ne pas manquer un malade),
@@ -382,7 +382,7 @@ extensions réelles (MedGemma, classifieur entraîné).
 
 ```bash
 # 1. Tests de fumée (structure, schéma, garde-fous, API, éval, robustesse)
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q            # 14 tests
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q            # 17 tests
 
 # 2. Évaluation baseline vs amélioration (écrit eval/results/ + logs SQLite)
 python eval/run_evaluation.py --mode toy

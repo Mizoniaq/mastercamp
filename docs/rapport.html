@@ -483,7 +483,7 @@ halluciner) :</p>
 <tr>
 <td>Latence médiane</td>
 <td style="text-align: center;">✅</td>
-<td>~3 ms / ~27 s</td>
+<td>~3 ms / ~32 s</td>
 </tr>
 <tr>
 <td>Taux d’incertitude</td>
@@ -813,7 +813,7 @@ d’entraînement (500/classe), 3 époques, GPU, seuil d’incertitude 0.60
 <td style="text-align: right;">0.767</td>
 <td style="text-align: right;">0.667</td>
 <td style="text-align: right;">0.867</td>
-<td style="text-align: right;">~17 s</td>
+<td style="text-align: right;">~32 s</td>
 <td style="text-align: right;">30</td>
 </tr>
 <tr>
@@ -821,7 +821,7 @@ d’entraînement (500/classe), 3 époques, GPU, seuil d’incertitude 0.60
 <td style="text-align: right;">0.533</td>
 <td style="text-align: right;">0.067</td>
 <td style="text-align: right;">1.000</td>
-<td style="text-align: right;">~16 s</td>
+<td style="text-align: right;">~27 s</td>
 <td style="text-align: right;">30</td>
 </tr>
 <tr>
@@ -836,8 +836,8 @@ d’entraînement (500/classe), 3 époques, GPU, seuil d’incertitude 0.60
 </table>
 <p><strong>Lecture honnête</strong> : le classifieur entraîné
 <strong>rattrape presque toutes les pneumonies</strong> (sensibilité
-0.987, contre 0.667/0.067 pour MedGemma) et infère <strong>~4000× plus
-vite</strong> (4 ms vs ~16 s). Le <strong>compromis</strong> est assumé
+0.987, contre 0.667/0.067 pour MedGemma) et infère <strong>~7000× plus
+vite</strong> (4 ms vs ~30 s). Le <strong>compromis</strong> est assumé
 : sa spécificité est plus basse (0.577) — il
 <strong>sur-signale</strong> (beaucoup de <code>normal</code> classés
 <code>suspected_opacity</code>), soit le <strong>mode d’échec
@@ -1069,7 +1069,7 @@ Variable d’environnement : <code>HF_TOKEN</code> (jamais commitée ;
 <h2 id="preuves-commandes-reproductibles">11. Preuves (commandes
 reproductibles)</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Tests de fumée (structure, schéma, garde-fous, API, éval, robustesse)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">PYTEST_DISABLE_PLUGIN_AUTOLOAD</span><span class="op">=</span>1 <span class="ex">python</span> <span class="at">-m</span> pytest <span class="at">-q</span>            <span class="co"># 14 tests</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">PYTEST_DISABLE_PLUGIN_AUTOLOAD</span><span class="op">=</span>1 <span class="ex">python</span> <span class="at">-m</span> pytest <span class="at">-q</span>            <span class="co"># 17 tests</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Évaluation baseline vs amélioration (écrit eval/results/ + logs SQLite)</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> eval/run_evaluation.py <span class="at">--mode</span> toy</span>

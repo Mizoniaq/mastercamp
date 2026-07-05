@@ -79,7 +79,7 @@ python eval/threshold_sweep.py                # analyse de sensibilité au seuil
 
 ```bash
 pip install -r requirements-test.txt
-python -m pytest -q                           # 15 tests doivent passer
+python -m pytest -q                           # 17 tests doivent passer
 ```
 
 ## 7. Autres interfaces (facultatif)
