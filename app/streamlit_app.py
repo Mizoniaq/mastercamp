@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.guardrails import WARNING_TEXT, apply_safety_guardrails
 from src.inference import robust_predict, vlm_predict, rejection_result
-from src.input_gate import gate_input
+from src.input_gate import gate_input, detector_available
 from src.database import fetch_recent_runs, log_prediction
 
 SAMPLE_DIR = ROOT / "data" / "sample_images"
@@ -102,6 +102,14 @@ def render_header() -> None:
         st.markdown("")
         st.badge("Prototype · non clinique", color="red")
     st.warning(f"**Usage non clinique.** {WARNING_TEXT}", icon="⚠️")
+    if not detector_available():
+        st.error(
+            "**Garde d'entrée en mode dégradé.** PyTorch/torchvision (ou l'artefact du "
+            "détecteur) est indisponible : seul le filtre **couleur** est actif, les images "
+            "grises non-radiographiques ne sont **pas** rejetées. Installez les dépendances "
+            "(`pip install -r requirements.txt`) pour la protection complète.",
+            icon="🛡️",
+        )
 
 
 def render_prediction_card(pred: dict) -> None:

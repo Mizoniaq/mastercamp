@@ -79,6 +79,19 @@ def cxr_probability(path) -> tuple[float, float] | None:
     return prob, m["threshold"]
 
 
+def detector_available() -> bool:
+    """Cheap check (no model download): are torch/torchvision + the artifact present?
+
+    Lets the UI warn when the deep detector is unavailable and the gate is running
+    on the colour check only (less precise: grayscale non-radiographs slip through).
+    """
+    import importlib.util
+
+    if not ARTIFACT.exists():
+        return False
+    return all(importlib.util.find_spec(m) is not None for m in ("torch", "torchvision"))
+
+
 def gate_input(path) -> tuple[bool, str]:
     """(accepted, reason). Rejects colour photos and any non-chest-X-ray image."""
     ok, reason = is_probably_cxr(path)          # colour check (always available)
