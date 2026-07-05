@@ -58,5 +58,8 @@ models/
 assets/
 .rollback*/
 
+# Fiche de préparation personnelle (soutenance) — non versionnée
+fiche_soutenance.pdf
+
 # Doublon local ; le PDF partageable vit dans docs/appel_offre.pdf
 /appel_offre.pdf
