@@ -146,8 +146,9 @@ Pensez à **citer la source et la licence** du dataset dans le rapport.
 | `ModuleNotFoundError` | L'environnement n'est pas activé, ou `pip install -r requirements.txt` a échoué |
 | `streamlit` : commande inconnue | Activer `.venv` puis réinstaller les dépendances |
 | Port 8501 déjà utilisé | `streamlit run app/streamlit_app.py --server.port 8502` |
-| MedGemma : erreur **403 / gated** | Accepter la licence sur la page du modèle + définir `HF_TOKEN` |
+| MedGemma : erreur **403 / gated** ou « indisponible » | Normal : ce moteur exige **votre propre** `HF_TOKEN` + acceptation de la licence sur huggingface.co/google/medgemma-4b-it. Le moteur **Jouet** marche sans token. |
 | MedGemma très lent | Normal (~30 s/image sur GPU) ; rester sur le moteur « Jouet » pour une démo rapide |
+| Le **garde d'entrée** ne rejette pas une image grise hors-radio | `torchvision` manquant : refaire `pip install -r requirements.txt`. Sans lui, seul le rejet des images **couleur** fonctionne. |
 
 ---
 

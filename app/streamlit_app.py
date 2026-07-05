@@ -153,7 +153,13 @@ def predict(image_path: Path, mode: str, engine: str) -> dict:
             try:
                 return apply_safety_guardrails(vlm_predict(image_path, mode=mode, model_id=MEDGEMMA_MODEL))
             except Exception as exc:
-                st.error(f"MedGemma indisponible ({exc}). Repli sur le moteur jouet.")
+                st.error(
+                    "MedGemma indisponible. Ce moteur nécessite **votre propre** token "
+                    "Hugging Face (`HF_TOKEN`) **et** l'acceptation de la licence du modèle "
+                    "sur huggingface.co/google/medgemma-4b-it (voir QUICKSTART.md §8). "
+                    "Le moteur **Jouet** fonctionne sans rien de tout ça. "
+                    f"\n\nDétail technique : {exc}"
+                )
     return apply_safety_guardrails(robust_predict(image_path, mode=mode))
 
 
